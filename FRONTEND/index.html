@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassFlow</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="submission.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════ -->
+<div id="login-screen" class="screen active">
+  <div class="login-wrap">
+    <div class="login-logo">ClassFlow</div>
+    <div class="login-tagline">Smarter learning management</div>
+    <div class="login-box">
+      <label for="email-input">College email address</label>
+      <input type="email" id="email-input" placeholder="you@student.du.ac.in" style="width:100%;margin-bottom:4px;">
+      <p class="login-hint">student.du.ac.in → Student &nbsp;·&nbsp; faculty.du.ac.in → Teacher</p>
+      <div class="role-preview" id="role-preview"></div>
+      <button class="btn btn-dark btn-full" onclick="doLogin()">Sign in →</button>
+      <div class="demo-row">
+        <button class="btn btn-primary btn-full" style="font-size:12px;" onclick="autofill('student')">Demo: Student</button>
+        <button class="btn btn-success btn-full" style="font-size:12px;" onclick="autofill('teacher')">Demo: Teacher</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     STUDENT APP
+══════════════════════════════════════ -->
+<div id="student-app" class="app">
+
+  <!-- ── MOBILE TOPBAR ── -->
+  <div class="mob-topbar" id="s-mob-topbar">
+    <div class="mob-topbar-brand">ClassFlow</div>
+    <div class="mob-topbar-right">
+      <span class="role-pill role-student" style="margin:0;">Student</span>
+      <button class="mob-menu-btn" onclick="openDrawer('s')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── DRAWER OVERLAY ── -->
+  <div class="mob-drawer-overlay" id="s-drawer-overlay" onclick="closeDrawer('s')"></div>
+
+  <!-- ── SLIDE-OUT DRAWER (full sidebar) ── -->
+  <div class="mob-drawer" id="s-drawer">
+    <div class="sidebar-brand">ClassFlow</div>
+    <span class="role-pill role-student" style="margin-bottom:8px;">Student</span>
+    <div class="nav-item active" onclick="showStudentPage('s-dashboard',this);closeDrawer('s')">📊 Dashboard</div>
+    <div class="nav-item" onclick="showStudentPage('s-classes',this);closeDrawer('s')">🏫 My Classes</div>
+    <div class="nav-item" onclick="showStudentPage('s-assignments',this);closeDrawer('s')">📋 Assignments</div>
+    <div class="nav-item" onclick="showStudentPage('s-grades',this);closeDrawer('s')">🎯 Grades</div>
+    <div class="nav-item" onclick="showStudentPage('s-planner',this);closeDrawer('s')">📅 Planner</div>
+    <div class="nav-item" onclick="showStudentPage('s-alerts',this);closeDrawer('s')">🔔 Alerts <span class="badge badge-red" style="margin-left:auto;font-size:10px;padding:1px 6px;">3</span></div>
+    <div class="nav-section">My Classes</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes',this);closeDrawer('s')"><div class="nav-dot" style="background:#E24B4A"></div>Operating Systems</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes',this);closeDrawer('s')"><div class="nav-dot" style="background:#378ADD"></div>Database Mgmt</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes',this);closeDrawer('s')"><div class="nav-dot" style="background:#1D9E75"></div>Computer Networks</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes',this);closeDrawer('s')"><div class="nav-dot" style="background:#BA7517"></div>Engg Maths</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes',this);closeDrawer('s')"><div class="nav-dot" style="background:#7F77DD"></div>Software Engg</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes',this);closeDrawer('s')"><div class="nav-dot" style="background:#D4537E"></div>HCI & Design</div>
+    <div class="sidebar-footer">
+      <div class="s-name" id="s-drawer-name">Priya Sharma</div>
+      <div class="s-email" id="s-drawer-email">priya@student.du.ac.in</div>
+      <button class="btn btn-gray btn-full" style="margin-top:8px;font-size:11px;" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM NAV BAR ── -->
+  <nav class="mobile-nav" id="s-mobile-nav">
+    <div class="mobile-nav-inner">
+      <button class="mob-nav-btn active" onclick="showStudentPage('s-dashboard',this);setMobNav('s',this)">
+        <span class="mob-icon">📊</span>Home
+      </button>
+      <button class="mob-nav-btn" onclick="showStudentPage('s-classes',this);setMobNav('s',this)">
+        <span class="mob-icon">🏫</span>Classes
+      </button>
+      <button class="mob-nav-btn" onclick="showStudentPage('s-assignments',this);setMobNav('s',this)">
+        <span class="mob-icon">📋</span>Tasks
+      </button>
+      <button class="mob-nav-btn" onclick="showStudentPage('s-grades',this);setMobNav('s',this)">
+        <span class="mob-icon">🎯</span>Grades
+      </button>
+      <button class="mob-nav-btn" onclick="showStudentPage('s-alerts',this);setMobNav('s',this)">
+        <span class="mob-icon">🔔</span>Alerts
+        <span class="mob-badge">3</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sidebar (desktop only) -->
+  <div class="sidebar" id="student-sidebar">
+    <div class="sidebar-brand">ClassFlow</div>
+    <span class="role-pill role-student">Student</span>
+
+    <div class="nav-item active" onclick="showStudentPage('s-dashboard', this)">📊 Dashboard</div>
+    <div class="nav-item" onclick="showStudentPage('s-classes', this)">🏫 My Classes</div>
+    <div class="nav-item" onclick="showStudentPage('s-assignments', this)">📋 Assignments</div>
+    <div class="nav-item" onclick="showStudentPage('s-grades', this)">🎯 Grades</div>
+    <div class="nav-item" onclick="showStudentPage('s-planner', this)">📅 Planner</div>
+    <div class="nav-item" onclick="showStudentPage('s-alerts', this)">
+      🔔 Alerts
+      <span class="badge badge-red" id="s-notif-count" style="margin-left:auto;font-size:10px;padding:1px 6px;">3</span>
+    </div>
+
+    <div class="nav-section">My Classes</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes', this)"><div class="nav-dot" style="background:#E24B4A"></div>Operating Systems</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes', this)"><div class="nav-dot" style="background:#378ADD"></div>Database Mgmt</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes', this)"><div class="nav-dot" style="background:#1D9E75"></div>Computer Networks</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes', this)"><div class="nav-dot" style="background:#BA7517"></div>Engg Maths</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes', this)"><div class="nav-dot" style="background:#7F77DD"></div>Software Engg</div>
+    <div class="nav-item" style="gap:6px;" onclick="showStudentPage('s-classes', this)"><div class="nav-dot" style="background:#D4537E"></div>HCI & Design</div>
+
+    <div class="sidebar-footer">
+      <div class="s-name" id="s-user-name">Priya Sharma</div>
+      <div class="s-email" id="s-user-email">priya@student.du.ac.in</div>
+      <button class="btn btn-gray btn-full" style="margin-top:8px;font-size:11px;" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="s-dashboard" class="page active">
+      <div class="topbar">
+        <div class="greeting" id="s-greeting">Good morning, Priya 👋</div>
+      </div>
+      <div class="metrics-grid metrics-3">
+        <div class="metric-card"><div class="mlabel">Classes joined</div><div class="mvalue">6</div></div>
+        <div class="metric-card"><div class="mlabel">Due this week</div><div class="mvalue" style="color:#9b2020;" id="s-due-count">4</div></div>
+        <div class="metric-card"><div class="mlabel">Avg grade</div><div class="mvalue" style="color:#1a6b40;" id="s-avg-grade">78%</div></div>
+      </div>
+      <div class="card">
+        <div class="card-label" style="color:#9b2020;">🚨 Due soon</div>
+        <div id="due-soon-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">📝 Recently graded</div>
+        <div id="graded-list"></div>
+      </div>
+    </div>
+
+    <!-- MY CLASSES -->
+    <div id="s-classes" class="page">
+      <div class="topbar">
+        <div class="page-title">My Classes (6)</div>
+        <button class="btn btn-primary btn-sm">+ Join class</button>
+      </div>
+      <div class="class-grid" id="class-grid"></div>
+    </div>
+
+    <!-- INDIVIDUAL CLASS VIEW (opens when you click a class card) -->
+    <div id="s-class-view" class="page">
+      <!-- Class header banner -->
+      <div id="class-banner" style="height:100px;border-radius:12px;margin-bottom:1rem;padding:1.25rem;display:flex;align-items:flex-end;">
+        <div>
+          <div id="class-banner-title" style="font-size:20px;font-weight:700;color:white;"></div>
+          <div id="class-banner-prof" style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:2px;"></div>
+        </div>
+      </div>
+
+      <!-- Tab bar — Stream / Classwork / People -->
+      <div style="display:flex;gap:0;border-bottom:2px solid #f0ede6;margin-bottom:1rem;">
+        <button class="class-tab active" onclick="switchClassTab(this,'ct-stream')" style="padding:8px 20px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;color:#1a5a9a;border-bottom:2px solid #1a5a9a;margin-bottom:-2px;">Stream</button>
+        <button class="class-tab" onclick="switchClassTab(this,'ct-classwork')" style="padding:8px 20px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;color:#888;">Classwork</button>
+        <button class="class-tab" onclick="switchClassTab(this,'ct-people')" style="padding:8px 20px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;color:#888;">People</button>
+        <button onclick="showStudentPage('s-classes',null)" style="margin-left:auto;padding:6px 12px;font-size:12px;border:none;background:transparent;cursor:pointer;color:#888;">← Back to classes</button>
+      </div>
+
+      <!-- STREAM TAB -->
+      <div id="ct-stream" class="class-tab-content">
+        <!-- Upcoming box -->
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:200px;flex-shrink:0;">
+            <div class="card">
+              <p style="font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Upcoming</p>
+              <div id="class-upcoming"></div>
+            </div>
+          </div>
+          <!-- Stream feed -->
+          <div style="flex:1;">
+            <div id="class-stream-feed"></div>
+            <!-- Comment box -->
+            <div class="card" style="display:flex;align-items:center;gap:10px;">
+              <div class="avatar" style="background:#dceeff;color:#1a5a9a;flex-shrink:0;" id="stream-user-avatar">PS</div>
+              <input type="text" id="class-comment-input" placeholder="Share something with your class..." style="flex:1;">
+              <button class="btn btn-primary btn-sm" onclick="postClassComment()">Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLASSWORK TAB -->
+      <div id="ct-classwork" class="class-tab-content" style="display:none;">
+        <div class="card" id="classwork-list"></div>
+      </div>
+
+      <!-- PEOPLE TAB -->
+      <div id="ct-people" class="class-tab-content" style="display:none;">
+        <div class="card">
+          <div class="card-label">Teacher</div>
+          <div class="row" style="cursor:default;">
+            <div class="avatar" style="background:#fef3dc;color:#7a4800;" id="people-teacher-avatar">RK</div>
+            <div><p style="font-size:13px;font-weight:500;margin:0;" id="people-teacher-name">Prof. R. Kumar</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Class teacher</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Classmates (50)</div>
+          <div id="people-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASSIGNMENTS -->
+    <div id="s-assignments" class="page">
+      <div class="page-title">All Assignments</div>
+      <div class="tab-row">
+        <button class="tab active" onclick="filterAssign(this, 'all')">All</button>
+        <button class="tab" onclick="filterAssign(this, 'pending')">Pending</button>
+        <button class="tab" onclick="filterAssign(this, 'submitted')">Submitted</button>
+        <button class="tab" onclick="filterAssign(this, 'graded')">Graded</button>
+      </div>
+      <div class="card" id="assign-list"></div>
+      <!-- Assignment detail panel -->
+      <div class="card" id="assign-detail">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.75rem;">
+          <div>
+            <div style="font-size:14px;font-weight:600;" id="ad-title"></div>
+            <div style="font-size:12px;color:#888;margin-top:2px;" id="ad-sub"></div>
+          </div>
+          <button class="btn btn-gray btn-sm" onclick="document.getElementById('assign-detail').style.display='none'">✕ Close</button>
+        </div>
+        <div id="ad-actions"></div>
+      </div>
+    </div>
+
+    <!-- GRADES -->
+    <div id="s-grades" class="page">
+      <div class="page-title">Grade Tracker</div>
+      <div class="card" id="grades-list"></div>
+    </div>
+
+    <!-- PLANNER -->
+    <div id="s-planner" class="page">
+      <div class="page-title">Week Planner — Mar 17–22</div>
+      <div class="planner-grid">
+        <div class="day-col">
+          <div class="day-header">Mon 17</div>
+          <div class="day-task" style="background:#fceaea;border-color:#E24B4A;color:#9b2020;">OS Lab Due</div>
+        </div>
+        <div class="day-col">
+          <div class="day-header">Tue 18</div>
+          <div class="day-task" style="background:#dceeff;border-color:#378ADD;color:#1a5a9a;">DBMS Quiz</div>
+        </div>
+        <div class="day-col">
+          <div class="day-header">Wed 19</div>
+          <div class="day-task" style="background:#fceaea;border-color:#D4537E;color:#9b2020;margin-bottom:4px;">HCI Due</div>
+          <div class="day-task" style="background:#f0ede6;border-color:#888;color:#555;">Presentation</div>
+        </div>
+        <div class="day-col">
+          <div class="day-header">Thu 20</div>
+          <div class="day-task" style="background:#fef3dc;border-color:#7F77DD;color:#5b3fc2;">SE Report</div>
+        </div>
+        <div class="day-col">
+          <div class="day-header">Fri 21</div>
+          <div class="day-task" style="background:#fef3dc;border-color:#BA7517;color:#7a4800;">Maths HW</div>
+        </div>
+        <div class="day-col">
+          <div class="day-header">Sat 22</div>
+          <div class="day-task" style="background:#dff0e6;border-color:#1D9E75;color:#1a6b40;">Free</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Workload this week</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="font-size:12px;color:#888;width:64px;">Mon–Tue</span>
+          <div class="bar-wrap"><div class="bar" style="width:90%;background:#E24B4A;"></div></div>
+          <span class="badge badge-red">Heavy</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="font-size:12px;color:#888;width:64px;">Wed–Thu</span>
+          <div class="bar-wrap"><div class="bar" style="width:55%;background:#BA7517;"></div></div>
+          <span class="badge badge-amber">Moderate</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:#888;width:64px;">Fri–Sat</span>
+          <div class="bar-wrap"><div class="bar" style="width:25%;background:#1D9E75;"></div></div>
+          <span class="badge badge-green">Light</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="s-alerts" class="page">
+      <div class="page-title">Smart Alerts</div>
+      <div class="card" id="notif-list"></div>
+    </div>
+
+  </div><!-- end main-content -->
+</div><!-- end student-app -->
+
+
+<!-- ══════════════════════════════════════
+     TEACHER APP
+══════════════════════════════════════ -->
+<div id="teacher-app" class="app">
+
+  <!-- ── MOBILE TOPBAR ── -->
+  <div class="mob-topbar" id="t-mob-topbar">
+    <div class="mob-topbar-brand">ClassFlow</div>
+    <div class="mob-topbar-right">
+      <span class="role-pill role-teacher" style="margin:0;">Teacher</span>
+      <button class="mob-menu-btn" onclick="openDrawer('t')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── DRAWER OVERLAY ── -->
+  <div class="mob-drawer-overlay" id="t-drawer-overlay" onclick="closeDrawer('t')"></div>
+
+  <!-- ── SLIDE-OUT DRAWER (full sidebar) ── -->
+  <div class="mob-drawer" id="t-drawer">
+    <div class="sidebar-brand">ClassFlow</div>
+    <span class="role-pill role-teacher" style="margin-bottom:8px;">Teacher</span>
+    <div class="nav-item active" onclick="showTeacherPage('t-dashboard',this);closeDrawer('t')">📊 Dashboard</div>
+    <div class="nav-item" onclick="showTeacherPage('t-classes',this);closeDrawer('t')">🏫 My Classes</div>
+    <div class="nav-item" onclick="showTeacherPage('t-assignments',this);closeDrawer('t')">📋 Assignments</div>
+    <div class="nav-item" onclick="showTeacherPage('t-students',this);closeDrawer('t')">👥 Students</div>
+    <div class="nav-item" onclick="showTeacherPage('t-grades',this);closeDrawer('t')">🎯 Grade Book</div>
+    <div class="nav-item" onclick="showTeacherPage('t-alerts',this);closeDrawer('t')">🔔 Alerts</div>
+    <div class="sidebar-footer">
+      <div class="s-name" id="t-drawer-name">Dr. Arjun Mehta</div>
+      <div class="s-email" id="t-drawer-email">arjun@faculty.du.ac.in</div>
+      <button class="btn btn-gray btn-full" style="margin-top:8px;font-size:11px;" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM NAV BAR ── -->
+  <nav class="mobile-nav" id="t-mobile-nav">
+    <div class="mobile-nav-inner">
+      <button class="mob-nav-btn active" onclick="showTeacherPage('t-dashboard',this);setMobNav('t',this)">
+        <span class="mob-icon">📊</span>Home
+      </button>
+      <button class="mob-nav-btn" onclick="showTeacherPage('t-classes',this);setMobNav('t',this)">
+        <span class="mob-icon">🏫</span>Classes
+      </button>
+      <button class="mob-nav-btn" onclick="showTeacherPage('t-assignments',this);setMobNav('t',this)">
+        <span class="mob-icon">📋</span>Tasks
+      </button>
+      <button class="mob-nav-btn" onclick="showTeacherPage('t-students',this);setMobNav('t',this)">
+        <span class="mob-icon">👥</span>Students
+      </button>
+      <button class="mob-nav-btn" onclick="showTeacherPage('t-grades',this);setMobNav('t',this)">
+        <span class="mob-icon">🎯</span>Grades
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sidebar (desktop only) -->
+  <div class="sidebar" id="teacher-sidebar">
+    <div class="sidebar-brand">ClassFlow</div>
+    <span class="role-pill role-teacher">Teacher</span>
+
+    <div class="nav-item active" onclick="showTeacherPage('t-dashboard', this)">📊 Dashboard</div>
+    <div class="nav-item" onclick="showTeacherPage('t-classes', this)">🏫 My Classes</div>
+    <div class="nav-item" onclick="showTeacherPage('t-submissions', this)">📋 Submissions</div>
+    <div class="nav-item" onclick="showTeacherPage('t-grading', this)">
+      ✏️ Grade Queue
+      <span class="badge badge-red" style="margin-left:auto;font-size:10px;padding:1px 6px;">5</span>
+    </div>
+    <div class="nav-item" onclick="showTeacherPage('t-announce', this)">📢 Post Announcement</div>
+
+    <div class="nav-section">My Classes</div>
+    <div class="nav-item" style="gap:6px;"><div class="nav-dot" style="background:#E24B4A"></div>Operating Systems</div>
+    <div class="nav-item" style="gap:6px;"><div class="nav-dot" style="background:#378ADD"></div>Database Mgmt</div>
+    <div class="nav-item" style="gap:6px;"><div class="nav-dot" style="background:#1D9E75"></div>Computer Networks</div>
+
+    <div class="sidebar-footer">
+      <div class="s-name" id="t-user-name">Prof. R. Kumar</div>
+      <div class="s-email" id="t-user-email">kumar@faculty.du.ac.in</div>
+      <button class="btn btn-gray btn-full" style="margin-top:8px;font-size:11px;" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main-content">
+
+    <!-- TEACHER DASHBOARD -->
+    <div id="t-dashboard" class="page active">
+      <div class="topbar">
+        <div class="greeting">Good morning, Prof. Kumar 👋</div>
+        <div class="view-toggle">
+          <button class="view-btn on">Teacher view</button>
+          <button class="view-btn off" onclick="logout()">Switch to student</button>
+        </div>
+      </div>
+      <div class="metrics-grid metrics-4">
+        <div class="metric-card"><div class="mlabel">Total students</div><div class="mvalue">87</div></div>
+        <div class="metric-card"><div class="mlabel">Pending grading</div><div class="mvalue" style="color:#7a4800;">24</div></div>
+        <div class="metric-card"><div class="mlabel">Submission rate</div><div class="mvalue" style="color:#1a6b40;">91%</div></div>
+        <div class="metric-card"><div class="mlabel">Class average</div><div class="mvalue" style="color:#7a4800;">71%</div></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Assignment submission tracker</div>
+        <div class="row">
+          <div style="flex:1.5;"><p style="font-size:13px;font-weight:500;margin:0;">OS Lab Assignment 3</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Due today · 11:59 PM</p></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar" style="width:68%;background:#1D9E75;"></div></div><span style="font-size:12px;white-space:nowrap;">34/50</span></div>
+          <span class="badge badge-amber">16 missing</span>
+          <button class="btn btn-gray btn-sm" onclick="alert('Reminder sent to 16 students!')">Remind all</button>
+        </div>
+        <div class="row">
+          <div style="flex:1.5;"><p style="font-size:13px;font-weight:500;margin:0;">Mid-term Exam</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Graded · 50 submissions</p></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar" style="width:100%;background:#1D9E75;"></div></div><span style="font-size:12px;white-space:nowrap;">50/50</span></div>
+          <span class="badge badge-green">All submitted</span>
+          <button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">View grades</button>
+        </div>
+        <div class="row">
+          <div style="flex:1.5;"><p style="font-size:13px;font-weight:500;margin:0;">DBMS Quiz 2</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Due tomorrow · 9 AM</p></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar" style="width:22%;background:#BA7517;"></div></div><span style="font-size:12px;white-space:nowrap;">11/50</span></div>
+          <span class="badge badge-amber">39 pending</span>
+          <button class="btn btn-gray btn-sm" onclick="alert('Reminder sent to 39 students!')">Remind all</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Needs grading</div>
+        <div class="row">
+          <div class="avatar" style="background:#dceeff;color:#1a5a9a;">RS</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Rahul Sharma — OS Lab 3</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 2 hrs ago</p></div>
+          <button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button>
+        </div>
+        <div class="row">
+          <div class="avatar" style="background:#dff0e6;color:#1a6b40;">AP</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Anjali Patel — OS Lab 3</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 4 hrs ago</p></div>
+          <button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button>
+        </div>
+        <div class="row">
+          <div class="avatar" style="background:#fef3dc;color:#7a4800;">MK</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Mohit Kumar — OS Lab 3</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 6 hrs ago</p></div>
+          <button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Class performance — Operating Systems</div>
+        <div class="metrics-grid metrics-3" style="margin-bottom:0;">
+          <div class="metric-card"><div class="mlabel">Class average</div><div class="mvalue" style="color:#7a4800;">71%</div></div>
+          <div class="metric-card"><div class="mlabel">Top score</div><div class="mvalue" style="color:#1a6b40;">98%</div></div>
+          <div class="metric-card"><div class="mlabel">Below 50%</div><div class="mvalue" style="color:#9b2020;">6</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEACHER CLASS VIEW (opens when you click a class card) -->
+    <div id="t-class-view" class="page">
+      <div id="t-class-banner" style="height:100px;border-radius:12px;margin-bottom:1rem;padding:1.25rem;display:flex;align-items:flex-end;">
+        <div>
+          <div id="t-class-banner-title" style="font-size:20px;font-weight:700;color:white;"></div>
+          <div id="t-class-banner-section" style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:2px;"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:0;border-bottom:2px solid #f0ede6;margin-bottom:1rem;">
+        <button class="t-class-tab active" onclick="switchTeacherClassTab(this,'tct-stream')" style="padding:8px 20px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;color:#1a5a9a;border-bottom:2px solid #1a5a9a;margin-bottom:-2px;">Stream</button>
+        <button class="t-class-tab" onclick="switchTeacherClassTab(this,'tct-classwork')" style="padding:8px 20px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;color:#888;">Classwork</button>
+        <button class="t-class-tab" onclick="switchTeacherClassTab(this,'tct-people')" style="padding:8px 20px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;color:#888;">People</button>
+        <button onclick="showTeacherPage('t-classes',null)" style="margin-left:auto;padding:6px 12px;font-size:12px;border:none;background:transparent;cursor:pointer;color:#888;">← Back</button>
+      </div>
+
+      <!-- STREAM TAB (teacher) -->
+      <div id="tct-stream" class="t-class-tab-content">
+        <div style="display:flex;gap:12px;">
+          <!-- Left: quick links + upcoming -->
+          <div style="width:200px;flex-shrink:0;">
+            <div class="card">
+              <p style="font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Quick Links</p>
+              <p style="font-size:12px;color:#1a5a9a;cursor:pointer;margin:0;">📎 Course materials</p>
+            </div>
+            <div class="card">
+              <p style="font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Upcoming</p>
+              <div id="t-class-upcoming"></div>
+            </div>
+          </div>
+          <!-- Right: stream + new announcement -->
+          <div style="flex:1;">
+            <button class="btn btn-dark btn-full" style="margin-bottom:1rem;" onclick="showTeacherPage('t-announce',document.querySelectorAll('#teacher-sidebar .nav-item')[4])">+ New announcement</button>
+            <div id="t-class-stream-feed"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLASSWORK TAB (teacher) -->
+      <div id="tct-classwork" class="t-class-tab-content" style="display:none;">
+        <div class="card" id="t-classwork-list"></div>
+      </div>
+
+      <!-- PEOPLE TAB (teacher) -->
+      <div id="tct-people" class="t-class-tab-content" style="display:none;">
+        <div class="card">
+          <div class="card-label">Students (50)</div>
+          <div id="t-people-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEACHER CLASSES -->
+    <div id="t-classes" class="page">
+      <div class="page-title">My Classes</div>
+      <div class="class-grid">
+        <div class="class-card" onclick="openTeacherClass('os')">
+          <div class="class-card-header" style="background:#E24B4A;"><div><h3>Operating Systems</h3><p>50 students</p></div></div>
+          <div class="class-card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:11px;color:#888;">16 not submitted</span><span class="badge badge-amber">Action needed</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:#888;">Avg</span><div class="bar-wrap"><div class="bar" style="width:71%;background:#E24B4A;"></div></div><span style="font-size:11px;font-weight:500;">71%</span></div>
+          </div>
+        </div>
+        <div class="class-card" onclick="openTeacherClass('dbms')">
+          <div class="class-card-header" style="background:#378ADD;"><div><h3>Database Management</h3><p>45 students</p></div></div>
+          <div class="class-card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:11px;color:#888;">All submitted</span><span class="badge badge-green">Up to date</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:#888;">Avg</span><div class="bar-wrap"><div class="bar" style="width:79%;background:#378ADD;"></div></div><span style="font-size:11px;font-weight:500;">79%</span></div>
+          </div>
+        </div>
+        <div class="class-card" onclick="openTeacherClass('cn')">
+          <div class="class-card-header" style="background:#1D9E75;"><div><h3>Computer Networks</h3><p>48 students</p></div></div>
+          <div class="class-card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:11px;color:#888;">3 not submitted</span><span class="badge badge-amber">Action needed</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:#888;">Avg</span><div class="bar-wrap"><div class="bar" style="width:82%;background:#1D9E75;"></div></div><span style="font-size:11px;font-weight:500;">82%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMISSIONS -->
+    <div id="t-submissions" class="page">
+      <div class="page-title">Submission Tracker</div>
+      <div class="card">
+        <div class="card-label">OS Lab Assignment 3 — 34/50 submitted</div>
+        <div class="row"><div class="avatar" style="background:#dff0e6;color:#1a6b40;">PS</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Priya Sharma</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 2 hrs ago</p></div><span class="badge badge-blue">Submitted</span><button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button></div>
+        <div class="row"><div class="avatar" style="background:#dceeff;color:#1a5a9a;">RS</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Rahul Sharma</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 4 hrs ago</p></div><span class="badge badge-blue">Submitted</span><button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button></div>
+        <div class="row"><div class="avatar" style="background:#fceaea;color:#9b2020;">MK</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Mohit Kumar</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Not submitted yet</p></div><span class="badge badge-red">Missing</span><button class="btn btn-gray btn-sm" onclick="alert('Reminder sent to Mohit Kumar!')">Remind</button></div>
+        <div class="row"><div class="avatar" style="background:#fef3dc;color:#7a4800;">AP</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Anjali Patel</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 6 hrs ago</p></div><span class="badge badge-blue">Submitted</span><button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button></div>
+      </div>
+    </div>
+
+    <!-- GRADE QUEUE -->
+    <div id="t-grading" class="page">
+      <div class="page-title">Grade Queue</div>
+      <div class="card" id="grade-queue"></div>
+      <div class="card" id="graded-done" style="display:none;">
+        <p style="font-size:13px;color:#1a6b40;text-align:center;padding:0.5rem 0;">✅ All caught up! No more submissions to grade.</p>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div id="t-announce" class="page">
+      <div class="page-title">Post Announcement</div>
+      <div class="card">
+        <div style="margin-bottom:10px;">
+          <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Title</label>
+          <input type="text" id="ann-title" placeholder="e.g. Lab cancelled on Friday">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Message</label>
+          <textarea id="ann-body" placeholder="Type your announcement here..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="ann-class" style="flex:1;">
+            <option>All classes</option>
+            <option>Operating Systems</option>
+            <option>Database Management</option>
+            <option>Computer Networks</option>
+          </select>
+          <button class="btn btn-dark" onclick="postAnnouncement()">Post →</button>
+        </div>
+      </div>
+      <div id="ann-list">
+        <p style="font-size:13px;color:#bbb;text-align:center;padding:1rem 0;">No announcements posted yet.</p>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+</div><!-- end teacher-app -->
+
+
+<!-- ══════════════════════════════════════
+     ASSIGNMENT DETAIL PAGE (full-screen overlay)
+══════════════════════════════════════ -->
+<div id="assign-detail-page" class="assign-detail-page"></div>
+
+<!-- ── SUBMIT CONFIRMATION DIALOG ── -->
+<div class="submit-confirm-overlay" id="submit-confirm-overlay">
+  <div class="submit-confirm-box">
+    <div style="font-size:36px;margin-bottom:10px;">📤</div>
+    <div class="submit-confirm-title" id="submit-confirm-title">Hand in assignment?</div>
+    <div class="submit-confirm-sub"   id="submit-confirm-sub">Your work will be submitted to your teacher.</div>
+    <div class="submit-confirm-btns">
+      <button class="btn btn-gray" style="flex:1;" onclick="closeSubmitConfirm()">Cancel</button>
+      <button class="btn btn-dark" style="flex:1;" id="submit-confirm-btn" onclick="">Hand in</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SUCCESS TOAST ── -->
+<div class="sub-toast" id="sub-toast">✅ Done!</div>
+
+<!-- ── TEACHER GRADING PANEL (inside grade queue page) ── -->
+<div id="teacher-grade-panel" style="display:none;margin-top:1rem;"></div>
+
+<!-- ── DARK MODE TOGGLE (always visible) ── -->
+<button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
+  <div class="dark-toggle-knob" id="dark-knob">🌙</div>
+</button>
+
+<!-- ══════════════════════════════════════
+     SCRIPTS — data.js MUST come before script.js
+══════════════════════════════════════ -->
+
+<script src="data.js"></script>
+<script src="api.js"></script>
+<script src="script.js"></script>
+<script src="submission.js"></script>
+<script src="api-bridge.js"></script>
+</body>
+</html>
