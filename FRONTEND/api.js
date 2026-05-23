@@ -4,7 +4,7 @@
 // Then add: <script src="api-bridge.js"> (see below)
 // ============================================================
 
-const API_URL = 'https://classflow-backend-bdrh.onrender.com';
+const API_URL = 'https://classflow-skuk.onrender.com';
 // Local testing: const API_URL = 'https://classflow-backend-bdrh.onrender.com';
 
 // ── TOKEN ──
