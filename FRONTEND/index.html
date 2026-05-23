@@ -435,7 +435,7 @@
           <div style="flex:1.5;"><p style="font-size:13px;font-weight:500;margin:0;">OS Lab Assignment 3</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Due today · 11:59 PM</p></div>
           <div style="flex:1;display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar" style="width:68%;background:#1D9E75;"></div></div><span style="font-size:12px;white-space:nowrap;">34/50</span></div>
           <span class="badge badge-amber">16 missing</span>
-          <button class="btn btn-gray btn-sm" onclick="alert('Reminder sent to 16 students!')">Remind all</button>
+          <button class="btn btn-gray btn-sm" onclick="showToast('Reminder sent to 16 students!', 'success')">Remind all</button>
         </div>
         <div class="row">
           <div style="flex:1.5;"><p style="font-size:13px;font-weight:500;margin:0;">Mid-term Exam</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Graded · 50 submissions</p></div>
@@ -447,7 +447,7 @@
           <div style="flex:1.5;"><p style="font-size:13px;font-weight:500;margin:0;">DBMS Quiz 2</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Due tomorrow · 9 AM</p></div>
           <div style="flex:1;display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar" style="width:22%;background:#BA7517;"></div></div><span style="font-size:12px;white-space:nowrap;">11/50</span></div>
           <span class="badge badge-amber">39 pending</span>
-          <button class="btn btn-gray btn-sm" onclick="alert('Reminder sent to 39 students!')">Remind all</button>
+          <button class="btn btn-gray btn-sm" onclick="showToast('Reminder sent to 39 students!', 'success')">Remind all</button>
         </div>
       </div>
       <div class="card">
@@ -564,7 +564,7 @@
         <div class="card-label">OS Lab Assignment 3 — 34/50 submitted</div>
         <div class="row"><div class="avatar" style="background:#dff0e6;color:#1a6b40;">PS</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Priya Sharma</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 2 hrs ago</p></div><span class="badge badge-blue">Submitted</span><button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button></div>
         <div class="row"><div class="avatar" style="background:#dceeff;color:#1a5a9a;">RS</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Rahul Sharma</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 4 hrs ago</p></div><span class="badge badge-blue">Submitted</span><button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button></div>
-        <div class="row"><div class="avatar" style="background:#fceaea;color:#9b2020;">MK</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Mohit Kumar</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Not submitted yet</p></div><span class="badge badge-red">Missing</span><button class="btn btn-gray btn-sm" onclick="alert('Reminder sent to Mohit Kumar!')">Remind</button></div>
+        <div class="row"><div class="avatar" style="background:#fceaea;color:#9b2020;">MK</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Mohit Kumar</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Not submitted yet</p></div><span class="badge badge-red">Missing</span><button class="btn btn-gray btn-sm" onclick="showToast('Reminder sent to Mohit Kumar!', 'success')">Remind</button></div>
         <div class="row"><div class="avatar" style="background:#fef3dc;color:#7a4800;">AP</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">Anjali Patel</p><p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted 6 hrs ago</p></div><span class="badge badge-blue">Submitted</span><button class="btn btn-primary btn-sm" onclick="showTeacherPage('t-grading', document.querySelectorAll('#teacher-sidebar .nav-item')[3])">Grade</button></div>
       </div>
     </div>
@@ -644,7 +644,7 @@
 
 <script src="data.js"></script>
 <script src="api.js"></script>
-<script src="script.js"></script>
+<script src="script.js?v=3"></script>
 <script src="submission.js"></script>
 <script src="api-bridge.js"></script>
 </body>
