@@ -1,3 +1,4 @@
+// v2.0
 function showToast(message, type = 'info') {
   const existing = document.getElementById('cf-toast');
   if (existing) existing.remove();
