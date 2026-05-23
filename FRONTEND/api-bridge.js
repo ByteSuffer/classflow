@@ -1,30 +1,20 @@
 /**
  * api-bridge.js — Connects ClassFlow frontend to the real backend.
- *
- * HOW TO USE:
- * 1. Add api.js and api-bridge.js to your classflow-mobile folder
- * 2. In index.html, replace:
- *      <script src="data.js"></script>
- *    With:
- *      <script src="api.js"></script>
- *      <script src="api-bridge.js"></script>
- * 3. Keep script.js and submission.js — they still handle the UI.
- *    This file overrides the data-fetching parts only.
  */
 
 // ─────────────────────────────────────────
 // OVERRIDE: doLogin — use real API
 // ─────────────────────────────────────────
 window.doLogin = async function () {
-  const email = document.getElementById('email-input').value.trim();
+  const email    = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input') ? document.getElementById('password-input').value : '';
   if (!email || !email.includes('@')) {
-    alert('Please enter a valid college email');
+    showToast('Please enter a valid college email', 'warning');
     return;
   }
 
   try {
-    // Demo: no password required in dev mode
-    currentUser = await apiLogin(email, 'password123');
+    currentUser = await apiLogin(email, password);
 
     document.getElementById('login-screen').classList.remove('active');
 
@@ -32,17 +22,21 @@ window.doLogin = async function () {
       document.getElementById('teacher-app').classList.add('active');
       document.getElementById('t-user-name').textContent  = currentUser.name;
       document.getElementById('t-user-email').textContent = currentUser.email;
+      if (document.getElementById('t-drawer-name'))  document.getElementById('t-drawer-name').textContent  = currentUser.name;
+      if (document.getElementById('t-drawer-email')) document.getElementById('t-drawer-email').textContent = currentUser.email;
       await renderTeacherDashboardFromAPI();
     } else {
       document.getElementById('student-app').classList.add('active');
       document.getElementById('s-user-name').textContent  = currentUser.name;
       document.getElementById('s-user-email').textContent = currentUser.email;
+      if (document.getElementById('s-drawer-name'))  document.getElementById('s-drawer-name').textContent  = currentUser.name;
+      if (document.getElementById('s-drawer-email')) document.getElementById('s-drawer-email').textContent = currentUser.email;
       const firstName = currentUser.name.split(' ')[0];
       document.getElementById('s-greeting').textContent = 'Good morning, ' + firstName + ' 👋';
       await renderStudentDashboardFromAPI();
     }
   } catch (err) {
-    alert('Login failed: ' + err.message);
+    showToast('Login failed: ' + err.message, 'error');
   }
 };
 
@@ -58,18 +52,15 @@ async function renderStudentDashboardFromAPI() {
       apiGetNotifications()
     ]);
 
-    // Populate global arrays so existing render functions still work
     window.SUBJECTS      = subjects;
     window.ASSIGNMENTS   = assignments;
     window.NOTIFICATIONS = notifications;
 
-    // Metrics
     const dueEl = document.getElementById('s-due-count');
     const avgEl = document.getElementById('s-avg-grade');
     if (dueEl) dueEl.textContent = dash.due_this_week || 0;
     if (avgEl) avgEl.textContent = (dash.avg_grade || '--') + '%';
 
-    // Due soon list
     const dueSoonEl = document.getElementById('due-soon-list');
     if (dueSoonEl && dash.due_soon) {
       dueSoonEl.innerHTML = dash.due_soon.map(a => {
@@ -83,7 +74,6 @@ async function renderStudentDashboardFromAPI() {
       }).join('');
     }
 
-    // Recently graded list
     const gradedEl = document.getElementById('graded-list');
     if (gradedEl && dash.recently_graded) {
       gradedEl.innerHTML = dash.recently_graded.map(a => {
@@ -97,7 +87,6 @@ async function renderStudentDashboardFromAPI() {
       }).join('');
     }
 
-    // Re-render existing UI sections using now-populated globals
     renderClassGrid();
     renderAssignmentList();
     renderGrades();
@@ -122,12 +111,6 @@ async function renderTeacherDashboardFromAPI() {
     window.SUBJECTS    = subjects;
     window.ASSIGNMENTS = assignments;
 
-    // Metrics
-    const fields = [
-      ['total_students',  '.metric-card:nth-child(1) .mvalue'],
-      ['pending_grading', '.metric-card:nth-child(2) .mvalue'],
-      ['submission_rate', '.metric-card:nth-child(3) .mvalue'],
-    ];
     const grid = document.querySelector('#t-dashboard .metrics-grid');
     if (grid) {
       const cards = grid.querySelectorAll('.metric-card .mvalue');
@@ -136,7 +119,6 @@ async function renderTeacherDashboardFromAPI() {
       if (cards[2]) cards[2].textContent = (dash.submission_rate  || 0) + '%';
     }
 
-    // Needs grading list
     const queueEl = document.getElementById('grade-queue');
     if (queueEl && dash.needs_grading) {
       queueEl.innerHTML = dash.needs_grading.map(s => `
@@ -158,7 +140,7 @@ async function renderTeacherDashboardFromAPI() {
 }
 
 // ─────────────────────────────────────────
-// OVERRIDE: renderStudentDashboard (called by script.js internally)
+// OVERRIDE: renderStudentDashboard
 // ─────────────────────────────────────────
 window.renderStudentDashboard = function () {
   renderStudentDashboardFromAPI();
@@ -170,14 +152,12 @@ window.renderTeacherDashboard = function () {
 
 // ─────────────────────────────────────────
 // OVERRIDE: finalSubmit — use real API
-// Matches finalSubmit() in submission.js
 // ─────────────────────────────────────────
 window.finalSubmit = async function (id) {
   closeSubmitConfirm();
   const st = SUBMISSION_STATE[id];
 
   try {
-    // Combine file names and links into one comma-separated string
     const allLinks = [
       ...st.files.map(f => f.name),
       ...st.links
@@ -185,12 +165,10 @@ window.finalSubmit = async function (id) {
 
     const result = await apiSubmitAssignment(id, allLinks, st.text || '');
 
-    // Store backend submission ID so we can unsubmit or comment later
     st.backendId   = result.submission.id;
     st.status      = 'submitted';
     st.submittedAt = result.submission.submitted_at;
 
-    // Update local ASSIGNMENTS array so UI reflects change
     const a = ASSIGNMENTS.find(x => x.id === id);
     if (a) a.status = 'submitted';
 
@@ -204,10 +182,10 @@ window.finalSubmit = async function (id) {
     const sub = SUBJECTS.find(s => s.id === (a ? a.subject : null));
     renderAssignDetailPage(a, sub, st);
     renderStudentDashboard();
-    showToast('✅ Assignment submitted!');
+    showToast('Assignment submitted successfully!', 'success');
 
   } catch (err) {
-    showToast('Submission failed: ' + err.message, '#E24B4A');
+    showToast('Submission failed: ' + err.message, 'error');
   }
 };
 
@@ -217,7 +195,7 @@ window.finalSubmit = async function (id) {
 window.unsubmitAssignment = async function (id) {
   const st = SUBMISSION_STATE[id];
   if (!st || !st.backendId) {
-    showToast('Cannot unsubmit — submission ID not found', '#E24B4A');
+    showToast('Cannot unsubmit — submission ID not found', 'error');
     return;
   }
   try {
@@ -230,9 +208,9 @@ window.unsubmitAssignment = async function (id) {
     const sub = SUBJECTS.find(s => s.id === (a ? a.subject : null));
     renderAssignDetailPage(a, sub, st);
     renderStudentDashboard();
-    showToast('Submission recalled. You can edit and resubmit.', '#7a4800');
+    showToast('Submission recalled. You can edit and resubmit.', 'warning');
   } catch (err) {
-    showToast('Unsubmit failed: ' + err.message, '#E24B4A');
+    showToast('Unsubmit failed: ' + err.message, 'error');
   }
 };
 
@@ -242,24 +220,22 @@ window.unsubmitAssignment = async function (id) {
 window.returnGradeToStudent = async function (key, studentId, assignId) {
   const score    = TEACHER_GRADES[key] ? TEACHER_GRADES[key].score : null;
   const feedback = (document.getElementById('grade-feedback-' + key) || {}).value || '';
-  if (!score && score !== 0) { showToast('Please enter a grade first', '#E24B4A'); return; }
+  if (!score && score !== 0) { showToast('Please enter a grade first', 'warning'); return; }
 
-  // We need the backend submission ID — fetch it first
   try {
     const subData = await apiGetSubmissions(assignId);
     const sub     = subData.submissions.find(s => s.student_id === studentId);
-    if (!sub) { showToast('Submission not found in database', '#E24B4A'); return; }
+    if (!sub) { showToast('Submission not found in database', 'error'); return; }
 
     await apiGradeSubmission(sub.id, score, feedback);
 
-    // Update local state
     GRADED_IDS.add(studentId);
     ensureSubState(assignId);
     SUBMISSION_STATE[assignId].status   = 'graded';
     SUBMISSION_STATE[assignId].score    = score;
     SUBMISSION_STATE[assignId].feedback = feedback || 'Good work!';
 
-    const a       = ASSIGNMENTS.find(x => x.id === assignId);
+    const a = ASSIGNMENTS.find(x => x.id === assignId);
     if (a) { a.status = 'graded'; a.score = score; }
 
     const student = { name: sub.student_name };
@@ -271,11 +247,11 @@ window.returnGradeToStudent = async function (key, studentId, assignId) {
     });
 
     document.getElementById('teacher-grade-panel').style.display = 'none';
-    showToast(`✅ Grade returned to ${student.name}!`);
+    showToast('Grade returned to ' + student.name + '!', 'success');
     renderGradeQueue();
 
   } catch (err) {
-    showToast('Grading failed: ' + err.message, '#E24B4A');
+    showToast('Grading failed: ' + err.message, 'error');
   }
 };
 
@@ -286,13 +262,11 @@ window.postAnnouncement = async function () {
   const title = document.getElementById('ann-title').value.trim();
   const body  = document.getElementById('ann-body').value.trim();
   const cls   = document.getElementById('ann-class').value;
-  if (!title || !body) { alert('Please fill in both title and message'); return; }
+  if (!title || !body) { showToast('Please fill in both title and message', 'warning'); return; }
 
   try {
-    // Send class name — backend resolves it to subject_id
     const ann = await apiPostAnnouncement(title, body, cls === 'All classes' ? null : cls);
 
-    // Push into local ANNOUNCEMENTS for immediate UI update
     ANNOUNCEMENTS.unshift({
       title:  ann.title,
       body:   ann.body,
@@ -315,10 +289,10 @@ window.postAnnouncement = async function () {
     if (currentTeacherClassId) renderTeacherClassStream(currentTeacherClassId);
     if (currentClassId)        renderClassStream(currentClassId);
 
-    showToast('✅ Announcement posted!');
+    showToast('Announcement posted! Students will see it in Alerts.', 'success');
 
   } catch (err) {
-    alert('Failed to post announcement: ' + err.message);
+    showToast('Failed to post announcement: ' + err.message, 'error');
   }
 };
 
@@ -336,7 +310,7 @@ window.addClassComment = async function (postId) {
     STREAM_COMMENTS[postId].push(comment);
     renderClassStream(currentClassId);
   } catch (err) {
-    showToast('Comment failed: ' + err.message, '#E24B4A');
+    showToast('Comment failed: ' + err.message, 'error');
   }
 };
 
@@ -349,7 +323,6 @@ window.addPrivateComment = async function (id) {
   if (!text) return;
   const st = SUBMISSION_STATE[id];
   if (!st || !st.backendId) {
-    // Fallback to in-memory if not yet submitted to backend
     const ini = currentUser ? currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : 'PS';
     st.privateComments.push({ author: currentUser ? currentUser.name : 'Priya Sharma', initials: ini, text, time: 'Just now', role: 'student' });
     const list = document.getElementById('private-comments-list');
@@ -364,7 +337,7 @@ window.addPrivateComment = async function (id) {
     if (list) list.innerHTML = renderPrivateComments(st);
     if (input) input.value = '';
   } catch (err) {
-    showToast('Comment failed: ' + err.message, '#E24B4A');
+    showToast('Comment failed: ' + err.message, 'error');
   }
 };
 
@@ -375,8 +348,6 @@ window.addPrivateComment = async function (id) {
   const token = getToken();
   if (!token) return;
   try {
-    // FIX: 5 second timeout — prevents Render's free-tier cold start from
-    // freezing the entire app and blocking all touch events on mobile
     const timeout = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('timeout')), 5000)
     );
@@ -398,7 +369,6 @@ window.addPrivateComment = async function (id) {
       await renderStudentDashboardFromAPI();
     }
   } catch (err) {
-    // Token expired, invalid, or backend timed out — show login screen
     removeToken();
   }
 })();
