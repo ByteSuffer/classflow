@@ -1,3 +1,27 @@
+function showToast(message, type = 'info') {
+  const existing = document.getElementById('cf-toast');
+  if (existing) existing.remove();
+  const colors = {
+    error:   { bg: '#2d1a1a', border: '#E24B4A', text: '#f5a0a0', icon: '✕' },
+    success: { bg: '#1a2d1a', border: '#1D9E75', text: '#a0f0c0', icon: '✓' },
+    info:    { bg: '#1a2040', border: '#378ADD', text: '#a0c8f5', icon: 'ℹ' },
+    warning: { bg: '#2d2410', border: '#BA7517', text: '#f5d080', icon: '⚠' }
+  };
+  const c = colors[type] || colors.info;
+  const toast = document.createElement('div');
+  toast.id = 'cf-toast';
+  toast.style.cssText = `
+    position:fixed; top:24px; left:50%; transform:translateX(-50%);
+    background:${c.bg}; border:1.5px solid ${c.border}; color:${c.text};
+    padding:14px 20px; border-radius:12px; font-size:13px; font-weight:500;
+    z-index:99999; max-width:340px; width:90%; text-align:center;
+    box-shadow:0 4px 24px rgba(0,0,0,0.4); display:flex; align-items:center; gap:10px;
+  `;
+  toast.innerHTML = `<span style="font-size:16px;">${c.icon}</span><span>${message}</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3500);
+}
+
 function showRegister() {
   document.getElementById('login-box').style.display = 'none';
   document.getElementById('register-box').style.display = 'block';
@@ -12,13 +36,13 @@ async function doRegister() {
   const name     = document.getElementById('reg-name').value.trim();
   const email    = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
-  if (!name || !email || !password) { alert('Please fill in all fields'); return; }
-  if (password.length < 6)          { alert('Password must be at least 6 characters'); return; }
+  if (!name || !email || !password) { showToast('Please fill in all fields', 'warning'); return; }
+  if (password.length < 6)          { showToast('Password must be at least 6 characters', 'warning'); return; }
   try {
     const user = await apiRegister(name, email, password);
     launchApp(user);
   } catch (err) {
-    alert('Registration failed: ' + err.message);
+    showToast('Registration failed: ' + err.message, 'error');
   }
 }
 
@@ -74,12 +98,12 @@ function autofill(role) {
 async function doLogin() {
   const email    = document.getElementById('email-input').value.trim();
   const password = document.getElementById('password-input') ? document.getElementById('password-input').value : '';
-  if (!email || !email.includes('@')) { alert('Please enter a valid college email'); return; }
+  if (!email || !email.includes('@')) { showToast('Please enter a valid college email', 'warning'); return; }
   try {
     const user = await apiLogin(email, password);
     launchApp(user);
   } catch (err) {
-    alert('Login failed: ' + err.message);
+    showToast('Login failed: ' + err.message, 'error');
   }
 }
 function launchApp(user) {
@@ -267,7 +291,7 @@ function addClassComment(postId) {
 function postClassComment() {
   const input = document.getElementById('class-comment-input');
   const text  = input ? input.value.trim() : '';
-  if (!text) { alert('Please type a comment first'); return; }
+  if (!text) { showToast('Please type a comment first', 'warning'); return; }
   const posts = STREAM_POSTS.filter(p => p.subject === currentClassId);
   if (posts.length > 0) {
     if (!STREAM_COMMENTS[posts[0].id]) STREAM_COMMENTS[posts[0].id] = [];
@@ -599,14 +623,14 @@ function openAssignment(id) {
 function submitAssignment(id) {
   const linkEl = document.getElementById('submit-link');
   const link   = linkEl ? linkEl.value.trim() : '';
-  if (!link) { alert('Please enter a file link or name'); return; }
+  if (!link) { showToast('Please enter a file link or name', 'warning'); return; }
 
   const a   = ASSIGNMENTS.find(x => x.id === id);
   a.status  = 'submitted';
 
   renderStudentDashboard();
   document.getElementById('assign-detail').style.display = 'none';
-  alert('✅ Assignment submitted successfully!');
+  showToast('Assignment submitted successfully!', 'success');
 }
 
 function renderGrades() {
@@ -697,7 +721,7 @@ function saveGrade(studentId) {
   const input = document.getElementById('score-' + studentId);
   const score = parseInt(input.value);
   if (!score || score < 0 || score > 100) {
-    alert('Enter a valid score between 0 and 100');
+    showToast('Enter a valid score between 0 and 100', 'warning');
     return;
   }
 
@@ -730,7 +754,7 @@ function postAnnouncement() {
   const cls   = document.getElementById('ann-class').value;
 
   if (!title || !body) {
-    alert('Please fill in both title and message');
+    showToast('Please fill in both title and message', 'warning');
     return;
   }
 
@@ -763,7 +787,7 @@ function postAnnouncement() {
   // Refresh student class stream if open
   if (currentClassId) renderClassStream(currentClassId);
 
-  alert('✅ Announcement posted! Students will see it in their Alerts.');
+  showToast('Announcement posted! Students will see it in Alerts.', 'success');
 }
 
 function renderAnnouncementList() {
@@ -816,3 +840,4 @@ function setMobNav(role, btn) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') { closeDrawer('s'); closeDrawer('t'); }
 });
+
