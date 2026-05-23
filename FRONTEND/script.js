@@ -1,4 +1,26 @@
+function showRegister() {
+  document.getElementById('login-box').style.display = 'none';
+  document.getElementById('register-box').style.display = 'block';
+}
 
+function showLogin() {
+  document.getElementById('register-box').style.display = 'none';
+  document.getElementById('login-box').style.display = 'block';
+}
+
+async function doRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!name || !email || !password) { alert('Please fill in all fields'); return; }
+  if (password.length < 6)          { alert('Password must be at least 6 characters'); return; }
+  try {
+    const user = await apiRegister(name, email, password);
+    launchApp(user);
+  } catch (err) {
+    alert('Registration failed: ' + err.message);
+  }
+}
 
 // ── DARK MODE ──
 function toggleDarkMode() {
@@ -49,46 +71,47 @@ function autofill(role) {
   input.dispatchEvent(new Event('input'));
 }
 
-function doLogin() {
-  const email = document.getElementById('email-input').value.trim();
-  if (!email || !email.includes('@')) {
-    alert('Please enter a valid college email');
-    return;
+async function doLogin() {
+  const email    = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input') ? document.getElementById('password-input').value : '';
+  if (!email || !email.includes('@')) { alert('Please enter a valid college email'); return; }
+  try {
+    const user = await apiLogin(email, password);
+    launchApp(user);
+  } catch (err) {
+    alert('Login failed: ' + err.message);
   }
-  const isTeacher = email.includes('faculty') || email.includes('prof');
-
-  // Find user or create one from email
-  currentUser = USERS.find(u => u.email === email) || {
-    name:  isTeacher ? 'Prof. R. Kumar' : 'Priya Sharma',
-    email: email,
-    role:  isTeacher ? 'teacher' : 'student'
-  };
-
+}
+function launchApp(user) {
+  currentUser = user;
   document.getElementById('login-screen').classList.remove('active');
-
-  if (isTeacher) {
+  if (user.role === 'teacher') {
     document.getElementById('teacher-app').classList.add('active');
-    // Set teacher name and email in sidebar
-    document.getElementById('t-user-name').textContent  = currentUser.name;
-    document.getElementById('t-user-email').textContent = email;
+    document.getElementById('t-user-name').textContent  = user.name;
+    document.getElementById('t-user-email').textContent = user.email;
+    if (document.getElementById('t-drawer-name'))  document.getElementById('t-drawer-name').textContent  = user.name;
+    if (document.getElementById('t-drawer-email')) document.getElementById('t-drawer-email').textContent = user.email;
     renderTeacherDashboard();
   } else {
     document.getElementById('student-app').classList.add('active');
-    // Set student name and email in sidebar
-    document.getElementById('s-user-name').textContent  = currentUser.name;
-    document.getElementById('s-user-email').textContent = email;
-    // Set greeting with first name
-    const firstName = currentUser.name.split(' ')[0];
+    document.getElementById('s-user-name').textContent  = user.name;
+    document.getElementById('s-user-email').textContent = user.email;
+    if (document.getElementById('s-drawer-name'))  document.getElementById('s-drawer-name').textContent  = user.name;
+    if (document.getElementById('s-drawer-email')) document.getElementById('s-drawer-email').textContent = user.email;
+    const firstName = user.name.split(' ')[0];
     document.getElementById('s-greeting').textContent = 'Good morning, ' + firstName + ' 👋';
     renderStudentDashboard();
   }
 }
 
 function logout() {
+  apiLogout();
+  currentUser = null;
   document.getElementById('student-app').classList.remove('active');
   document.getElementById('teacher-app').classList.remove('active');
   document.getElementById('login-screen').classList.add('active');
   document.getElementById('email-input').value = '';
+  if (document.getElementById('password-input')) document.getElementById('password-input').value = '';
   document.getElementById('role-preview').style.display = 'none';
 }
 

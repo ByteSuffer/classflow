@@ -16,17 +16,36 @@
   <div class="login-wrap">
     <div class="login-logo">ClassFlow</div>
     <div class="login-tagline">Smarter learning management</div>
-    <div class="login-box">
+
+    <!-- LOGIN BOX -->
+    <div class="login-box" id="login-box">
       <label for="email-input">College email address</label>
       <input type="email" id="email-input" placeholder="you@student.du.ac.in" style="width:100%;margin-bottom:4px;">
       <p class="login-hint">student.du.ac.in → Student &nbsp;·&nbsp; faculty.du.ac.in → Teacher</p>
       <div class="role-preview" id="role-preview"></div>
+      <label for="password-input" style="margin-top:8px;display:block;">Password</label>
+      <input type="password" id="password-input" placeholder="Your password" style="width:100%;margin-bottom:4px;">
       <button class="btn btn-dark btn-full" onclick="doLogin()">Sign in →</button>
+      <p style="text-align:center;font-size:12px;color:#888;margin:10px 0 4px;">Don't have an account? <a href="#" onclick="showRegister()" style="color:#1a5a9a;">Register</a></p>
       <div class="demo-row">
         <button class="btn btn-primary btn-full" style="font-size:12px;" onclick="autofill('student')">Demo: Student</button>
         <button class="btn btn-success btn-full" style="font-size:12px;" onclick="autofill('teacher')">Demo: Teacher</button>
       </div>
     </div>
+
+    <!-- REGISTER BOX -->
+    <div class="login-box" id="register-box" style="display:none;">
+      <label>Full name</label>
+      <input type="text" id="reg-name" placeholder="Your full name" style="width:100%;margin-bottom:8px;">
+      <label>College email address</label>
+      <input type="email" id="reg-email" placeholder="you@student.du.ac.in" style="width:100%;margin-bottom:4px;">
+      <p class="login-hint">student.du.ac.in → Student &nbsp;·&nbsp; faculty.du.ac.in → Teacher</p>
+      <label style="margin-top:4px;display:block;">Password</label>
+      <input type="password" id="reg-password" placeholder="Min 6 characters" style="width:100%;margin-bottom:8px;">
+      <button class="btn btn-dark btn-full" onclick="doRegister()">Create account →</button>
+      <p style="text-align:center;font-size:12px;color:#888;margin:10px 0 4px;">Already have an account? <a href="#" onclick="showLogin()" style="color:#1a5a9a;">Sign in</a></p>
+    </div>
+
   </div>
 </div>
 
