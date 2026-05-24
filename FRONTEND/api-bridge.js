@@ -89,7 +89,6 @@ async function renderStudentDashboardFromAPI() {
       }).join('');
     }
 
-    // Show empty state if no subjects
     const grid = document.getElementById('class-grid');
     if (grid) {
       if (subjects.length === 0) {
@@ -100,9 +99,30 @@ async function renderStudentDashboardFromAPI() {
             <p style="font-size:13px;color:#888;margin:0 0 16px;">Ask your teacher for a class code and click + Join class</p>
           </div>`;
       } else {
-        renderClassGrid();
-        }
+        grid.innerHTML = subjects.map(s => {
+          const bc = s.pending > 0 ? 'badge-amber' : 'badge-green';
+          const bl = s.pending > 0 ? s.pending + ' pending' : 'Up to date';
+          return `<div class="class-card" onclick="openClass(${s.id})">
+            <div class="class-card-header" style="background:${s.color||'#378ADD'}">
+              <div><h3>${s.name}</h3><p>${s.professor||''}</p></div>
+            </div>
+            <div class="class-card-body">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:11px;color:#888;">${bl}</span>
+                <span class="badge ${bc}">${bl}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:11px;color:#888;">Grade</span>
+                <div class="bar-wrap"><div class="bar" style="width:${s.grade||0}%;background:${s.color||'#378ADD'}"></div></div>
+                <span style="font-size:11px;font-weight:500;">${s.grade||'--'}%</span>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      }
     }
+    const pageTitleEl = document.querySelector('#s-classes .page-title');
+    if (pageTitleEl) pageTitleEl.textContent = `My Classes (${subjects.length})`;
     renderAssignmentList();
     renderGrades();
     renderNotifications();
@@ -111,6 +131,7 @@ async function renderStudentDashboardFromAPI() {
     console.error('Dashboard load failed:', err);
   }
 }
+
 
 // ─────────────────────────────────────────
 // TEACHER DASHBOARD — from API
