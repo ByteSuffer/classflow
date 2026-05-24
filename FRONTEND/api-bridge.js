@@ -58,8 +58,10 @@ async function renderStudentDashboardFromAPI() {
 
     const dueEl = document.getElementById('s-due-count');
     const avgEl = document.getElementById('s-avg-grade');
+    const clsEl = document.getElementById('s-classes-count');
     if (dueEl) dueEl.textContent = dash.due_this_week || 0;
     if (avgEl) avgEl.textContent = (dash.avg_grade || '--') + '%';
+    if (clsEl) clsEl.textContent = dash.classes_joined || 0;
 
     const dueSoonEl = document.getElementById('due-soon-list');
     if (dueSoonEl && dash.due_soon) {
