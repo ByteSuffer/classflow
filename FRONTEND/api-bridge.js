@@ -87,7 +87,20 @@ async function renderStudentDashboardFromAPI() {
       }).join('');
     }
 
-    renderClassGrid();
+    // Show empty state if no subjects
+    const grid = document.getElementById('class-grid');
+    if (grid) {
+      if (subjects.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;">
+            <div style="font-size:48px;margin-bottom:12px;">🏫</div>
+            <p style="font-size:15px;font-weight:600;margin:0 0 6px;">No classes yet</p>
+            <p style="font-size:13px;color:#888;margin:0 0 16px;">Ask your teacher for a class code and click + Join class</p>
+          </div>`;
+      } else {
+        renderClassGrid();
+        }
+    }
     renderAssignmentList();
     renderGrades();
     renderNotifications();
