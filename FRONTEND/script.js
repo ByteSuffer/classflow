@@ -1,4 +1,27 @@
 // v2.0
+function openJoinClassModal() {
+  const overlay = document.getElementById('join-class-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('join-class-code').value = '';
+  document.getElementById('join-class-code').focus();
+}
+
+function closeJoinClassModal() {
+  document.getElementById('join-class-overlay').style.display = 'none';
+}
+
+async function submitJoinClass() {
+  const code = document.getElementById('join-class-code').value.trim().toUpperCase();
+  if (!code) { showToast('Please enter a class code', 'warning'); return; }
+  try {
+    const result = await apiJoinSubject(code);
+    showToast('Joined ' + result.subject.name + ' successfully!', 'success');
+    closeJoinClassModal();
+    renderStudentDashboard();
+  } catch (err) {
+    showToast('Failed to join: ' + err.message, 'error');
+  }
+}
 function showToast(message, type = 'info') {
   const existing = document.getElementById('cf-toast');
   if (existing) existing.remove();
