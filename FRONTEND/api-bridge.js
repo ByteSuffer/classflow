@@ -123,6 +123,27 @@ async function renderStudentDashboardFromAPI() {
     }
     const pageTitleEl = document.querySelector('#s-classes .page-title');
     if (pageTitleEl) pageTitleEl.textContent = `My Classes (${subjects.length})`;
+
+    // Update sidebar with real classes
+    const sidebarClassesSection = document.querySelector('#student-sidebar .nav-section');
+    if (sidebarClassesSection) {
+      // Remove all existing class nav items after the nav-section
+      let next = sidebarClassesSection.nextElementSibling;
+      while (next && next.classList.contains('nav-item')) {
+        const toRemove = next;
+        next = next.nextElementSibling;
+        toRemove.remove();
+      }
+      // Add real classes
+      subjects.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'nav-item';
+        div.style.gap = '6px';
+        div.innerHTML = `<div class="nav-dot" style="background:${s.color||'#378ADD'}"></div>${s.name}`;
+        div.onclick = () => openClass(s.id);
+        sidebarClassesSection.insertAdjacentElement('afterend', div);
+      });
+    }
     renderAssignmentList();
     renderGrades();
     renderNotifications();

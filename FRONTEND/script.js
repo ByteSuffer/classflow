@@ -17,7 +17,7 @@ async function submitJoinClass() {
     const result = await apiJoinSubject(code);
     showToast('Joined ' + result.subject.name + ' successfully!', 'success');
     closeJoinClassModal();
-    renderStudentDashboard();
+    await renderStudentDashboardFromAPI();
   } catch (err) {
     showToast('Failed to join: ' + err.message, 'error');
   }
@@ -187,7 +187,7 @@ let currentClassId = null;
 
 function openClass(subjectId) {
   currentClassId = subjectId;
-  const sub = SUBJECTS.find(s => s.id === subjectId);
+  const sub = SUBJECTS.find(s => s.id === subjectId || s.id === Number(subjectId));
 
   // Set banner
   document.getElementById('class-banner').style.background = sub.color;
