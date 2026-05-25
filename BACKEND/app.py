@@ -336,6 +336,17 @@ def join_subject():
     db.session.add(Enrollment(student_id=uid, subject_id=subject.id)); db.session.commit()
     return ok({'message': f'Joined {subject.name} successfully', 'subject': subject.to_dict(uid)}, 201)
 
+@app.route('/api/subjects/<int:subject_id>/unenroll', methods=['DELETE'])
+@jwt_required()
+def unenroll_subject(subject_id):
+    uid  = int(get_jwt_identity())
+    user = User.query.get(uid)
+    if user.role != 'student': return error('Only students can unenroll', 403)
+    enrollment = Enrollment.query.filter_by(student_id=uid, subject_id=subject_id).first()
+    if not enrollment: return error('You are not enrolled in this subject', 404)
+    db.session.delete(enrollment)
+    db.session.commit()
+    return ok({'message': 'Successfully unenrolled from subject'})
 
 @app.route('/api/subjects/<int:subject_id>/students', methods=['GET'])
 @jwt_required()
