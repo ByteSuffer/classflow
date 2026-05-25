@@ -187,8 +187,8 @@ let currentClassId = null;
 
 function openClass(subjectId) {
   currentClassId = subjectId;
-  const sub = SUBJECTS.find(s => s.id === subjectId || s.id === Number(subjectId));
-  if (!sub) { showToast('Class not found', 'error'); return; }
+  const sub = (window.SUBJECTS || SUBJECTS).find(s => s.id == subjectId);
+  if (!sub) return;
 
   // Set banner
   document.getElementById('class-banner').style.background = sub.color;
@@ -223,7 +223,8 @@ function switchClassTab(btn, tabId) {
 }
 
 function renderClassStream(subjectId) {
-  const sub   = SUBJECTS.find(s => s.id === subjectId);
+  const sub = (window.SUBJECTS || SUBJECTS).find(s => s.id == subjectId);
+  if (!sub) return;
   const feed  = document.getElementById('class-stream-feed');
   const upcoming = document.getElementById('class-upcoming');
   if (!feed) return;
@@ -335,7 +336,8 @@ function renderClasswork(subjectId) {
     list.innerHTML = '<p style="font-size:13px;color:#bbb;text-align:center;padding:0.5rem 0;">No assignments yet.</p>';
     return;
   }
-  const sub = SUBJECTS.find(s => s.id === subjectId);
+  const sub = (window.SUBJECTS || SUBJECTS).find(s => s.id == subjectId);
+  if (!sub) return;
   list.innerHTML = `<div class="card-label">Assignments</div>` + items.map(a => {
     const bc = a.status === 'graded' ? (a.score>=80?'badge-green':'badge-amber') : a.status === 'submitted' ? 'badge-blue' : a.due.includes('Today') ? 'badge-red' : 'badge-amber';
     const bl = a.status === 'graded' ? a.score+'/100' : a.status === 'submitted' ? 'Submitted' : a.due;
@@ -348,7 +350,8 @@ function renderClasswork(subjectId) {
 }
 
 function renderPeople(subjectId) {
-  const sub      = SUBJECTS.find(s => s.id === subjectId);
+  const sub = (window.SUBJECTS || SUBJECTS).find(s => s.id == subjectId);
+  if (!sub) return;
   const nameEl   = document.getElementById('people-teacher-name');
   const avatarEl = document.getElementById('people-teacher-avatar');
   const list     = document.getElementById('people-list');
