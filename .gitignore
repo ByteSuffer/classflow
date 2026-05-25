@@ -4,3 +4,10 @@ BACKEND/.env
 FRONTEND/node_modules/
 *.pyc
 .DS_Store
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
