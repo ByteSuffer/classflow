@@ -188,11 +188,12 @@ let currentClassId = null;
 function openClass(subjectId) {
   currentClassId = subjectId;
   const sub = SUBJECTS.find(s => s.id === subjectId || s.id === Number(subjectId));
+  if (!sub) { showToast('Class not found', 'error'); return; }
 
   // Set banner
   document.getElementById('class-banner').style.background = sub.color;
   document.getElementById('class-banner-title').textContent = sub.name;
-  document.getElementById('class-banner-prof').textContent  = sub.professor;
+  document.getElementById('class-banner-prof').textContent  = sub.professor || '';
 
   // Set user avatar initials
   const ini = currentUser ? currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : 'PS';
