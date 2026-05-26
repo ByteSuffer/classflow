@@ -102,7 +102,8 @@ async function renderStudentDashboardFromAPI() {
         grid.innerHTML = subjects.map(s => {
           const bc = s.pending > 0 ? 'badge-amber' : 'badge-green';
           const bl = s.pending > 0 ? s.pending + ' pending' : 'Up to date';
-          return `<div class="class-card" onclick="openClass(${s.id})">
+          return `<div class="class-card" onclick="openClass(${s.id})" style="position:relative;">
+            <button onclick="event.stopPropagation();unenrollClass(${s.id},'${s.name}')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.3);border:none;color:white;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;z-index:1;">Leave</button>
             <div class="class-card-header" style="background:${s.color||'#378ADD'}">
               <div><h3>${s.name}</h3><p>${s.professor||''}</p></div>
             </div>

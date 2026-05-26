@@ -10,6 +10,22 @@ function closeJoinClassModal() {
   document.getElementById('join-class-overlay').style.display = 'none';
 }
 
+async function unenrollClass(subjectId, subjectName) {
+  if (!confirm('Leave ' + subjectName + '?')) return;
+  try {
+    const response = await fetch('https://classflow-skuk.onrender.com/api/subjects/' + subjectId + '/unenroll', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('classflow-token') }
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    showToast('Left ' + subjectName + ' successfully', 'success');
+    await renderStudentDashboardFromAPI();
+  } catch (err) {
+    showToast('Failed to leave: ' + err.message, 'error');
+  }
+}
+
 async function submitJoinClass() {
   const code = document.getElementById('join-class-code').value.trim().toUpperCase();
   if (!code) { showToast('Please enter a class code', 'warning'); return; }
