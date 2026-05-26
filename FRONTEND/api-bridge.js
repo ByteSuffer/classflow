@@ -1013,3 +1013,158 @@ window.addPrivateComment = async function (id) {
     removeToken();
   }
 })();
+
+
+// ─────────────────────────────────────────
+// CREATE ASSIGNMENT MODAL
+// ─────────────────────────────────────────
+function openCreateAssignmentModal() {
+  if (!currentTeacherClassId) {
+    showToast('Please open a class first', 'warning');
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 16);
+  const sub   = (window.SUBJECTS || []).find(s => s.id == currentTeacherClassId);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'create-assign-overlay';
+  overlay.style.cssText = [
+    'position:fixed', 'top:0', 'left:0', 'width:100%', 'height:100%',
+    'background:rgba(0,0,0,0.6)', 'z-index:99998',
+    'display:flex', 'align-items:center', 'justify-content:center'
+  ].join(';');
+
+  overlay.innerHTML =
+    '<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--border,#333);border-radius:16px;' +
+    'padding:1.5rem;width:90%;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,0.5);max-height:90vh;overflow-y:auto;">' +
+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">' +
+    '<h3 style="font-size:16px;font-weight:600;margin:0;color:var(--text,#fff);">Create Assignment</h3>' +
+    '<button onclick="document.getElementById(\'create-assign-overlay\').remove()" ' +
+    'style="background:none;border:none;font-size:18px;cursor:pointer;color:#888;padding:4px;">x</button>' +
+    '</div>' +
+
+    '<label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Title *</label>' +
+    '<input type="text" id="ca-title" placeholder="e.g. Lab Report 3" style="width:100%;margin-bottom:12px;">' +
+
+    '<label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Description</label>' +
+    '<textarea id="ca-desc" placeholder="Instructions, guidelines, links..." ' +
+    'style="width:100%;min-height:80px;margin-bottom:12px;resize:vertical;"></textarea>' +
+
+    '<div style="display:flex;gap:12px;margin-bottom:12px;">' +
+    '<div style="flex:1;">' +
+    '<label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Due date and time *</label>' +
+    '<input type="datetime-local" id="ca-due" min="' + today + '" style="width:100%;">' +
+    '</div>' +
+    '<div style="width:100px;flex-shrink:0;">' +
+    '<label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Points</label>' +
+    '<input type="number" id="ca-points" value="100" min="1" max="1000" style="width:100%;">' +
+    '</div>' +
+    '</div>' +
+
+    '<div style="background:rgba(55,138,221,0.1);border:1px solid rgba(55,138,221,0.3);' +
+    'border-radius:8px;padding:10px 12px;margin-bottom:16px;">' +
+    '<p style="font-size:12px;color:#6aabf7;margin:0;">Assigning to: <strong>' +
+    (sub ? sub.name : 'current class') + '</strong></p>' +
+    '</div>' +
+
+    '<div style="display:flex;gap:8px;">' +
+    '<button class="btn btn-gray" style="flex:1;" ' +
+    'onclick="document.getElementById(\'create-assign-overlay\').remove()">Cancel</button>' +
+    '<button class="btn btn-dark" style="flex:1;" id="ca-submit-btn" ' +
+    'onclick="submitCreateAssignment()">Create assignment</button>' +
+    '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  setTimeout(function() {
+    var t = document.getElementById('ca-title');
+    if (t) t.focus();
+  }, 100);
+}
+
+async function submitCreateAssignment() {
+  var titleEl  = document.getElementById('ca-title');
+  var descEl   = document.getElementById('ca-desc');
+  var dueEl    = document.getElementById('ca-due');
+  var pointsEl = document.getElementById('ca-points');
+  var btn      = document.getElementById('ca-submit-btn');
+
+  var title  = titleEl  ? titleEl.value.trim()  : '';
+  var desc   = descEl   ? descEl.value.trim()   : '';
+  var due    = dueEl    ? dueEl.value           : '';
+  var points = pointsEl ? parseInt(pointsEl.value) || 100 : 100;
+
+  if (!title) {
+    showToast('Please enter an assignment title', 'warning');
+    if (titleEl) titleEl.focus();
+    return;
+  }
+  if (!due) {
+    showToast('Please set a due date', 'warning');
+    if (dueEl) dueEl.focus();
+    return;
+  }
+  if (!currentTeacherClassId) {
+    showToast('No class selected', 'error');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
+
+  try {
+    var result = await apiCreateAssignment({
+      title:       title,
+      description: desc,
+      subject_id:  currentTeacherClassId,
+      due_date:    new Date(due).toISOString(),
+      points:      points
+    });
+
+    if (window.ASSIGNMENTS) window.ASSIGNMENTS.push(result);
+
+    var overlay = document.getElementById('create-assign-overlay');
+    if (overlay) overlay.remove();
+
+    showToast('Assignment "' + title + '" created!', 'success');
+    renderTeacherClasswork(currentTeacherClassId);
+
+    // Switch to classwork tab to show result
+    var tabs = document.querySelectorAll('.t-class-tab');
+    if (tabs[1]) switchTeacherClassTab(tabs[1], 'tct-classwork');
+
+  } catch (err) {
+    showToast('Failed to create: ' + err.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Create assignment'; }
+  }
+}
+
+// ─────────────────────────────────────────
+// OVERRIDE: renderTeacherClasswork — real data
+// ─────────────────────────────────────────
+window.renderTeacherClasswork = function(subjectId) {
+  var list = document.getElementById('t-classwork-list');
+  if (!list) return;
+  var items = (window.ASSIGNMENTS || []).filter(function(a) { return a.subject == subjectId; });
+  if (items.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem 1rem;"><div style="font-size:40px;margin-bottom:10px;">📋</div><p style="font-size:14px;font-weight:600;margin:0 0 4px;">No assignments yet</p><p style="font-size:12px;color:#888;margin:0;">Click + Create assignment above to add one</p></div>';
+    return;
+  }
+  var sub = (window.SUBJECTS || []).find(function(s) { return s.id == subjectId; });
+  var color = sub ? (sub.color || '#378ADD') : '#378ADD';
+  list.innerHTML = items.map(function(a) {
+    var badgeClass = 'badge-amber';
+    var badgeText = a.due || 'No due date';
+    return '<div class="row" style="cursor:pointer;" onclick="showTeacherPage(\'t-submissions\',null)">' +
+      '<div class="dot" style="background:' + color + '"></div>' +
+      '<div style="flex:1;">' +
+      '<p style="font-size:13px;font-weight:500;margin:0;">' + a.title + '</p>' +
+      '<p style="font-size:11px;color:#888;margin:2px 0 0;">' + (a.description ? a.description.slice(0,60) + (a.description.length > 60 ? '...' : '') : 'No description') + '</p>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
+      '<span class="badge ' + badgeClass + '" style="font-size:10px;">Due ' + badgeText + '</span>' +
+      '<span style="font-size:10px;color:#888;">' + (a.points || 100) + ' pts</span>' +
+      '</div></div>';
+  }).join('');
+};

@@ -516,9 +516,13 @@
       </div>
 
       <!-- CLASSWORK TAB (teacher) -->
-      <div id="tct-classwork" class="t-class-tab-content" style="display:none;">
-        <div class="card" id="t-classwork-list"></div>
+    <div id="tct-classwork" class="t-class-tab-content" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:14px;font-weight:600;">Assignments</span>
+        <button class="btn btn-dark btn-sm" onclick="openCreateAssignmentModal()">+ Create assignment</button>
       </div>
+      <div class="card" id="t-classwork-list"></div>
+    </div>
 
       <!-- PEOPLE TAB (teacher) -->
       <div id="tct-people" class="t-class-tab-content" style="display:none;">
