@@ -1122,7 +1122,12 @@ async function submitCreateAssignment() {
       points:      points
     });
 
-    if (window.ASSIGNMENTS) window.ASSIGNMENTS.push(result);
+    // Re-fetch all assignments from backend so all classes get correct data
+    try {
+      window.ASSIGNMENTS = await apiGetAssignments();
+    } catch(e) {
+      if (window.ASSIGNMENTS) window.ASSIGNMENTS.push(result);
+    }
 
     var overlay = document.getElementById('create-assign-overlay');
     if (overlay) overlay.remove();
@@ -1146,25 +1151,121 @@ async function submitCreateAssignment() {
 window.renderTeacherClasswork = function(subjectId) {
   var list = document.getElementById('t-classwork-list');
   if (!list) return;
-  var items = (window.ASSIGNMENTS || []).filter(function(a) { return a.subject == subjectId; });
+
+  // Force both sides to same type for comparison
+  var sid = parseInt(subjectId);
+  var items = (window.ASSIGNMENTS || []).filter(function(a) {
+    return parseInt(a.subject) === sid || parseInt(a.subject_id) === sid;
+  });
+
   if (items.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:2rem 1rem;"><div style="font-size:40px;margin-bottom:10px;">📋</div><p style="font-size:14px;font-weight:600;margin:0 0 4px;">No assignments yet</p><p style="font-size:12px;color:#888;margin:0;">Click + Create assignment above to add one</p></div>';
+    list.innerHTML =
+      '<div style="text-align:center;padding:2rem 1rem;">' +
+      '<div style="font-size:40px;margin-bottom:10px;">📋</div>' +
+      '<p style="font-size:14px;font-weight:600;margin:0 0 4px;">No assignments yet</p>' +
+      '<p style="font-size:12px;color:#888;margin:0;">Click + Create assignment above to add one</p>' +
+      '</div>';
     return;
   }
-  var sub = (window.SUBJECTS || []).find(function(s) { return s.id == subjectId; });
+
+  var sub = (window.SUBJECTS || []).find(function(s) {
+    return parseInt(s.id) === sid;
+  });
   var color = sub ? (sub.color || '#378ADD') : '#378ADD';
-  list.innerHTML = items.map(function(a) {
-    var badgeClass = 'badge-amber';
-    var badgeText = a.due || 'No due date';
-    return '<div class="row" style="cursor:pointer;" onclick="showTeacherPage(\'t-submissions\',null)">' +
+
+  // Clear and use DOM nodes to avoid onclick string escaping issues
+  list.innerHTML = '';
+  items.forEach(function(a) {
+    var row = document.createElement('div');
+    row.className = 'row';
+    row.style.cursor = 'pointer';
+    row.innerHTML =
       '<div class="dot" style="background:' + color + '"></div>' +
       '<div style="flex:1;">' +
       '<p style="font-size:13px;font-weight:500;margin:0;">' + a.title + '</p>' +
-      '<p style="font-size:11px;color:#888;margin:2px 0 0;">' + (a.description ? a.description.slice(0,60) + (a.description.length > 60 ? '...' : '') : 'No description') + '</p>' +
-      '</div>' +
+      '<p style="font-size:11px;color:#888;margin:2px 0 0;">' +
+      (a.description ? a.description.slice(0, 60) + (a.description.length > 60 ? '...' : '') : 'No description') +
+      '</p></div>' +
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
-      '<span class="badge ' + badgeClass + '" style="font-size:10px;">Due ' + badgeText + '</span>' +
+      '<span class="badge badge-amber" style="font-size:10px;">Due ' + (a.due || 'TBD') + '</span>' +
       '<span style="font-size:10px;color:#888;">' + (a.points || 100) + ' pts</span>' +
-      '</div></div>';
-  }).join('');
+      '</div>';
+
+    // Correct click — open THIS specific assignment's submissions
+    row.addEventListener('click', function() {
+      openTeacherAssignmentDetail(a);
+    });
+    list.appendChild(row);
+  });
+}
+// ─────────────────────────────────────────
+// TEACHER: view assignment submissions detail
+// ─────────────────────────────────────────
+async function openTeacherAssignmentDetail(assignment) {
+  // Show a panel with submission list for this assignment
+  showTeacherPage('t-submissions', null);
+
+  const container = document.getElementById('t-submissions');
+  if (!container) return;
+
+  container.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;">' +
+    '<button onclick="showTeacherPage(\'t-class-view\',null)" ' +
+    'style="background:none;border:none;cursor:pointer;font-size:13px;color:#888;">← Back</button>' +
+    '<div class="page-title" style="margin:0;">' + assignment.title + '</div>' +
+    '</div>' +
+    '<div class="card" style="margin-bottom:12px;">' +
+    '<p style="font-size:13px;color:#888;margin:0 0 4px;">' + (assignment.description || 'No description') + '</p>' +
+    '<p style="font-size:12px;color:#888;margin:0;">Due: ' + (assignment.due || 'TBD') +
+    ' &nbsp;·&nbsp; ' + (assignment.points || 100) + ' points</p>' +
+    '</div>' +
+    '<div class="card" id="t-assign-submissions-list">' +
+    '<p style="font-size:13px;color:#888;text-align:center;padding:1rem;">Loading submissions...</p>' +
+    '</div>';
+
+  try {
+    const data = await apiGetSubmissions(assignment.id);
+    const subList = document.getElementById('t-assign-submissions-list');
+    if (!subList) return;
+
+    if (!data.submissions || data.submissions.length === 0) {
+      subList.innerHTML =
+        '<p style="font-size:13px;color:#bbb;text-align:center;padding:1rem;">No submissions yet.</p>' +
+        '<p style="font-size:12px;color:#888;text-align:center;">' +
+        (data.total_enrolled || 0) + ' students enrolled</p>';
+      return;
+    }
+
+    subList.innerHTML =
+      '<div style="font-size:12px;color:#888;margin-bottom:10px;">' +
+      data.total_submitted + '/' + data.total_enrolled + ' submitted</div>' +
+      data.submissions.map(function(s) {
+        var bc = s.status === 'graded' ? 'badge-green' : 'badge-blue';
+        var bl = s.status === 'graded' ? s.score + '/100' : 'Submitted';
+        return '<div class="row">' +
+          '<div class="avatar" style="background:#dceeff;color:#1a5a9a;">' + s.initials + '</div>' +
+          '<div style="flex:1;">' +
+          '<p style="font-size:13px;font-weight:500;margin:0;">' + s.student_name + '</p>' +
+          '<p style="font-size:11px;color:#888;margin:2px 0 0;">Submitted ' + s.submitted_at + '</p>' +
+          '</div>' +
+          '<span class="badge ' + bc + '">' + bl + '</span>' +
+          '</div>';
+      }).join('') +
+      (data.missing_students && data.missing_students.length > 0
+        ? '<div style="border-top:1px solid var(--border,#f0ede6);margin-top:8px;padding-top:8px;">' +
+          '<p style="font-size:11px;color:#888;margin:0 0 6px;">Not submitted:</p>' +
+          data.missing_students.map(function(u) {
+            return '<div class="row" style="opacity:0.6;">' +
+              '<div class="avatar" style="background:#fceaea;color:#9b2020;">' + u.initials + '</div>' +
+              '<div style="flex:1;"><p style="font-size:13px;margin:0;">' + u.name + '</p></div>' +
+              '<span class="badge badge-red">Missing</span>' +
+              '</div>';
+          }).join('') + '</div>'
+        : '');
+
+  } catch (err) {
+    const subList = document.getElementById('t-assign-submissions-list');
+    if (subList) subList.innerHTML =
+      '<p style="font-size:13px;color:#888;text-align:center;padding:1rem;">Could not load submissions: ' + err.message + '</p>';
+  }
 };
