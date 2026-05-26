@@ -1122,9 +1122,13 @@ async function submitCreateAssignment() {
       points:      points
     });
 
-    // Re-fetch all assignments from backend so all classes get correct data
+    // Re-fetch assignments for THIS class only, then merge into global array
     try {
-      window.ASSIGNMENTS = await apiGetAssignments();
+      const freshForClass = await apiGetAssignments(currentTeacherClassId);
+      // Remove old assignments for this class, add fresh ones
+      window.ASSIGNMENTS = (window.ASSIGNMENTS || [])
+        .filter(function(a) { return parseInt(a.subject) !== parseInt(currentTeacherClassId); })
+        .concat(freshForClass);
     } catch(e) {
       if (window.ASSIGNMENTS) window.ASSIGNMENTS.push(result);
     }
@@ -1148,56 +1152,54 @@ async function submitCreateAssignment() {
 // ─────────────────────────────────────────
 // OVERRIDE: renderTeacherClasswork — real data
 // ─────────────────────────────────────────
-window.renderTeacherClasswork = function(subjectId) {
+window.renderTeacherClasswork = async function(subjectId) {
   var list = document.getElementById('t-classwork-list');
   if (!list) return;
 
-  // Force both sides to same type for comparison
+  list.innerHTML = '<p style="font-size:13px;color:#888;text-align:center;padding:1rem;">Loading...</p>';
+
   var sid = parseInt(subjectId);
-  var items = (window.ASSIGNMENTS || []).filter(function(a) {
-    return parseInt(a.subject) === sid || parseInt(a.subject_id) === sid;
-  });
-
-  if (items.length === 0) {
-    list.innerHTML =
-      '<div style="text-align:center;padding:2rem 1rem;">' +
-      '<div style="font-size:40px;margin-bottom:10px;">📋</div>' +
-      '<p style="font-size:14px;font-weight:600;margin:0 0 4px;">No assignments yet</p>' +
-      '<p style="font-size:12px;color:#888;margin:0;">Click + Create assignment above to add one</p>' +
-      '</div>';
-    return;
-  }
-
-  var sub = (window.SUBJECTS || []).find(function(s) {
-    return parseInt(s.id) === sid;
-  });
+  var sub = (window.SUBJECTS || []).find(function(s) { return parseInt(s.id) === sid; });
   var color = sub ? (sub.color || '#378ADD') : '#378ADD';
 
-  // Clear and use DOM nodes to avoid onclick string escaping issues
-  list.innerHTML = '';
-  items.forEach(function(a) {
-    var row = document.createElement('div');
-    row.className = 'row';
-    row.style.cursor = 'pointer';
-    row.innerHTML =
-      '<div class="dot" style="background:' + color + '"></div>' +
-      '<div style="flex:1;">' +
-      '<p style="font-size:13px;font-weight:500;margin:0;">' + a.title + '</p>' +
-      '<p style="font-size:11px;color:#888;margin:2px 0 0;">' +
-      (a.description ? a.description.slice(0, 60) + (a.description.length > 60 ? '...' : '') : 'No description') +
-      '</p></div>' +
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
-      '<span class="badge badge-amber" style="font-size:10px;">Due ' + (a.due || 'TBD') + '</span>' +
-      '<span style="font-size:10px;color:#888;">' + (a.points || 100) + ' pts</span>' +
-      '</div>';
+  try {
+    // Always fetch fresh from API with subject_id filter — never trust cache
+    var items = await apiGetAssignments(sid);
 
-    // Correct click — open THIS specific assignment's submissions
-    row.addEventListener('click', function() {
-      openTeacherAssignmentDetail(a);
+    if (!items || items.length === 0) {
+      list.innerHTML =
+        '<div style="text-align:center;padding:2rem 1rem;">' +
+        '<div style="font-size:40px;margin-bottom:10px;">📋</div>' +
+        '<p style="font-size:14px;font-weight:600;margin:0 0 4px;">No assignments yet</p>' +
+        '<p style="font-size:12px;color:#888;margin:0;">Click + Create assignment above to add one</p>' +
+        '</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    items.forEach(function(a) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.style.cursor = 'pointer';
+      row.innerHTML =
+        '<div class="dot" style="background:' + color + '"></div>' +
+        '<div style="flex:1;">' +
+        '<p style="font-size:13px;font-weight:500;margin:0;">' + a.title + '</p>' +
+        '<p style="font-size:11px;color:#888;margin:2px 0 0;">' +
+        (a.description ? a.description.slice(0, 60) + (a.description.length > 60 ? '...' : '') : 'No description') +
+        '</p></div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
+        '<span class="badge badge-amber" style="font-size:10px;">Due ' + (a.due || 'TBD') + '</span>' +
+        '<span style="font-size:10px;color:#888;">' + (a.points || 100) + ' pts</span>' +
+        '</div>';
+      row.addEventListener('click', function() { openTeacherAssignmentDetail(a); });
+      list.appendChild(row);
     });
-    list.appendChild(row);
-  });
-}
+
+  } catch(err) {
+    list.innerHTML = '<p style="font-size:13px;color:#888;text-align:center;padding:1rem;">Failed to load: ' + err.message + '</p>';
+  }
+};
 // ─────────────────────────────────────────
 // TEACHER: view assignment submissions detail
 // ─────────────────────────────────────────
@@ -1267,5 +1269,25 @@ async function openTeacherAssignmentDetail(assignment) {
     const subList = document.getElementById('t-assign-submissions-list');
     if (subList) subList.innerHTML =
       '<p style="font-size:13px;color:#888;text-align:center;padding:1rem;">Could not load submissions: ' + err.message + '</p>';
+  }
+};
+// ─────────────────────────────────────────
+// OVERRIDE: openClass — re-fetch assignments for this subject
+// ─────────────────────────────────────────
+const _origOpenClass = window.openClass || openClass;
+window.openClass = async function(subjectId) {
+  // Call original first to render the page
+  _origOpenClass(subjectId);
+  // Then fetch fresh assignments for just this subject and update
+  try {
+    const fresh = await apiGetAssignments(parseInt(subjectId));
+    // Merge: remove old ones for this subject, add fresh
+    window.ASSIGNMENTS = (window.ASSIGNMENTS || [])
+      .filter(function(a) { return parseInt(a.subject) !== parseInt(subjectId); })
+      .concat(fresh);
+    // Re-render classwork with fresh data
+    renderClasswork(subjectId);
+  } catch(e) {
+    console.warn('Could not refresh assignments for class:', e.message);
   }
 };

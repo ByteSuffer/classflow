@@ -425,7 +425,7 @@ function postClassComment() {
 function renderClasswork(subjectId) {
   const list = document.getElementById('classwork-list');
   if (!list) return;
-  const items = ASSIGNMENTS.filter(a => a.subject === subjectId);
+  const items = ASSIGNMENTS.filter(a => parseInt(a.subject) === parseInt(subjectId));
   if (items.length === 0) {
     list.innerHTML = '<p style="font-size:13px;color:#bbb;text-align:center;padding:0.5rem 0;">No assignments yet.</p>';
     return;
