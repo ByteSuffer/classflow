@@ -10,8 +10,28 @@ function closeJoinClassModal() {
   document.getElementById('join-class-overlay').style.display = 'none';
 }
 
+function showConfirm(title, message) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99998;display:flex;align-items:center;justify-content:center;`;
+    overlay.innerHTML = `
+      <div style="background:var(--card-bg,#1a1a2e);border:1px solid #333;border-radius:16px;padding:1.5rem;width:90%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+        <p style="font-size:15px;font-weight:600;margin:0 0 8px;color:var(--text,#fff);">${title}</p>
+        <p style="font-size:13px;color:#888;margin:0 0 20px;">${message}</p>
+        <div style="display:flex;gap:8px;">
+          <button id="confirm-cancel" class="btn btn-gray" style="flex:1;">Cancel</button>
+          <button id="confirm-ok" class="btn btn-dark" style="flex:1;background:#E24B4A;border-color:#E24B4A;">Leave</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#confirm-cancel').onclick = () => { overlay.remove(); resolve(false); };
+    overlay.querySelector('#confirm-ok').onclick = () => { overlay.remove(); resolve(true); };
+  });
+}
+
 async function unenrollClass(subjectId, subjectName) {
-  if (!confirm('Leave ' + subjectName + '?')) return;
+  const confirmed = await showConfirm('Leave ' + subjectName + '?', 'You will lose access to all assignments and announcements in this class.');
+  if (!confirmed) return;
   try {
     const response = await fetch('https://classflow-skuk.onrender.com/api/subjects/' + subjectId + '/unenroll', {
       method: 'DELETE',
