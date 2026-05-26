@@ -1,4 +1,62 @@
 // v2.0
+function openCreateClassModal() {
+  const overlay = document.createElement('div');
+  overlay.id = 'create-class-overlay';
+  overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99998;display:flex;align-items:center;justify-content:center;`;
+  overlay.innerHTML = `
+    <div style="background:var(--card-bg,#fff);border-radius:16px;padding:1.5rem;width:90%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+      <h3 style="font-size:16px;font-weight:600;margin:0 0 16px;">Create a class</h3>
+      <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Class name</label>
+      <input type="text" id="cc-name" placeholder="e.g. Mathematics" style="width:100%;margin-bottom:12px;">
+      <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Class code</label>
+      <input type="text" id="cc-code" placeholder="e.g. MATH101" style="width:100%;margin-bottom:12px;text-transform:uppercase;">
+      <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Color</label>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        ${['#E24B4A','#378ADD','#1D9E75','#BA7517','#7F77DD','#D4537E'].map(c =>
+          `<div onclick="document.getElementById('cc-color').value='${c}'" style="width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer;border:2px solid transparent;" onmouseover="this.style.border='2px solid #fff'" onmouseout="this.style.border='2px solid transparent'"></div>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="cc-color" value="#378ADD">
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gray" style="flex:1;" onclick="document.getElementById('create-class-overlay').remove()">Cancel</button>
+        <button class="btn btn-dark" style="flex:1;" onclick="submitCreateClass()">Create →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function submitCreateClass() {
+  const name  = document.getElementById('cc-name').value.trim();
+  const code  = document.getElementById('cc-code').value.trim().toUpperCase();
+  const color = document.getElementById('cc-color').value;
+  if (!name || !code) { showToast('Please fill in name and code', 'warning'); return; }
+  try {
+    await fetch('https://classflow-skuk.onrender.com/api/subjects', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('classflow-token')
+      },
+      body: JSON.stringify({ name, code, color })
+    }).then(r => r.json()).then(d => { if (d.error) throw new Error(d.error); });
+    showToast('Class created successfully!', 'success');
+    document.getElementById('create-class-overlay').remove();
+    await renderTeacherDashboardFromAPI();
+  } catch (err) {
+    showToast('Failed to create class: ' + err.message, 'error');
+  }
+}
+
+function openTeacherClassFromAPI(subject) {
+  if (typeof subject === 'string') subject = JSON.parse(subject);
+  currentTeacherClassId = subject.id;
+  document.getElementById('t-class-banner').style.background = subject.color || '#378ADD';
+  document.getElementById('t-class-banner-title').textContent = subject.name;
+  document.getElementById('t-class-banner-section').textContent = 'Code: ' + subject.code;
+  showTeacherPage('t-class-view', null);
+  switchTeacherClassTab(document.querySelector('.t-class-tab'), 'tct-stream');
+}
+
 function openJoinClassModal() {
   const overlay = document.getElementById('join-class-overlay');
   overlay.style.display = 'flex';
@@ -846,6 +904,7 @@ function postAnnouncement() {
 
   // Re-render announcement list
   renderAnnouncementList();
+  
   // Refresh teacher class stream if open
   if (currentTeacherClassId) renderTeacherClassStream(currentTeacherClassId);
   // Refresh student class stream if open

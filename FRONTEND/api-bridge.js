@@ -344,15 +344,60 @@ window.postAnnouncement = async function () {
     document.getElementById('ann-body').value  = '';
 
     renderAnnouncementList();
-    if (currentTeacherClassId) renderTeacherClassStream(currentTeacherClassId);
-    if (currentClassId)        renderClassStream(currentClassId);
-
-    showToast('Announcement posted! Students will see it in Alerts.', 'success');
-
-  } catch (err) {
-    showToast('Failed to post announcement: ' + err.message, 'error');
+    // Update teacher sidebar with real classes
+  const teacherNavSection = document.querySelector('#teacher-sidebar .nav-section');
+  if (teacherNavSection) {
+    let next = teacherNavSection.nextElementSibling;
+    while (next && next.classList.contains('nav-item')) {
+      const toRemove = next;
+      next = next.nextElementSibling;
+      toRemove.remove();
+    }
+    subjects.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'nav-item';
+      div.style.gap = '6px';
+      div.innerHTML = `<div class="nav-dot" style="background:${s.color||'#378ADD'}"></div>${s.name}`;
+      div.onclick = () => openTeacherClassFromAPI(s);
+      sidebarSection.insertAdjacentElement('afterend', div);
+    });
   }
-};
+
+  // Update My Classes page with real subjects + Create Class button
+  const tClassesPage = document.getElementById('t-classes');
+  if (tClassesPage) {
+    tClassesPage.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <div class="page-title">My Classes (${subjects.length})</div>
+        <button class="btn btn-dark btn-sm" onclick="openCreateClassModal()">+ Create class</button>
+      </div>
+      <div class="class-grid">
+        ${subjects.length === 0 ? `
+          <div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;">
+            <div style="font-size:48px;margin-bottom:12px;">🏫</div>
+            <p style="font-size:15px;font-weight:600;margin:0 0 6px;">No classes yet</p>
+            <p style="font-size:13px;color:#888;">Click + Create class to get started</p>
+          </div>` :
+        subjects.map(s => `
+          <div class="class-card" onclick="openTeacherClassFromAPI(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+            <div class="class-card-header" style="background:${s.color||'#378ADD'}">
+              <div><h3>${s.name}</h3><p>Code: ${s.code}</p></div>
+            </div>
+            <div class="class-card-body">
+              <p style="font-size:12px;color:#888;margin:0;">Click to manage class</p>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+      if (currentTeacherClassId) renderTeacherClassStream(currentTeacherClassId);
+      if (currentClassId)        renderClassStream(currentClassId);
+
+      showToast('Announcement posted! Students will see it in Alerts.', 'success');
+
+    } catch (err) {
+      showToast('Failed to post announcement: ' + err.message, 'error');
+    }
+  };
 
 // ─────────────────────────────────────────
 // OVERRIDE: addClassComment — use real API
