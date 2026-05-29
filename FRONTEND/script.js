@@ -49,12 +49,13 @@ async function submitCreateClass() {
 
 function openTeacherClassFromAPI(subject) {
   if (typeof subject === 'string') subject = JSON.parse(subject);
-  currentTeacherClassId = subject.id;
+  currentTeacherClassId = parseInt(subject.id, 10);
   document.getElementById('t-class-banner').style.background = subject.color || '#378ADD';
   document.getElementById('t-class-banner-title').textContent = subject.name;
   document.getElementById('t-class-banner-section').textContent = 'Code: ' + subject.code;
   showTeacherPage('t-class-view', null);
   switchTeacherClassTab(document.querySelector('.t-class-tab'), 'tct-stream');
+  renderTeacherClasswork(currentTeacherClassId);
 }
 
 function openJoinClassModal() {
