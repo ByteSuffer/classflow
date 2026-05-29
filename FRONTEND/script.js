@@ -550,20 +550,46 @@ function renderTeacherClassStream(subjectId) {
 }
 
 function renderTeacherClasswork(subjectId) {
-  const list = document.getElementById('t-classwork-list');
+  // Delegated to api-bridge.js async version
+  var sid = parseInt(subjectId, 10);
+  var list = document.getElementById('t-classwork-list');
   if (!list) return;
-  const sub   = SUBJECTS.find(s => s.id === subjectId);
-  const items = ASSIGNMENTS.filter(a => a.subject === subjectId);
-  list.innerHTML = `<div class="card-label">Assignments</div>` + (items.length === 0
-    ? '<p style="font-size:13px;color:#bbb;">No assignments yet.</p>'
-    : items.map(a => {
-        const submitted = STUDENTS.filter(s => s.submitted).length;
-        return `<div class="row" onclick="showTeacherPage('t-submissions',null)">
-          <div class="dot" style="background:${sub.color}"></div>
-          <div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">${a.title}</p><p style="font-size:11px;color:#888;margin:2px 0 0;">${a.due}</p></div>
-          <span class="badge badge-blue">${submitted}/50 submitted</span>
-        </div>`;
-      }).join(''));
+
+  list.innerHTML = '<p style="font-size:13px;color:#888;text-align:center;padding:1rem;">Loading...</p>';
+
+  var token = localStorage.getItem('classflow-token');
+  fetch('https://classflow-skuk.onrender.com/api/assignments?subject_id=' + sid, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(items) {
+    if (!items || items.length === 0) {
+      list.innerHTML = '<p style="font-size:13px;color:#bbb;text-align:center;padding:0.5rem 0;">No assignments yet.</p>';
+      return;
+    }
+    var sub = (window.SUBJECTS || SUBJECTS).find(function(s) { return parseInt(s.id) === sid; });
+    var color = sub ? sub.color : '#378ADD';
+    list.innerHTML = '';
+    items.forEach(function(a) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.style.cursor = 'pointer';
+      row.innerHTML =
+        '<div class="dot" style="background:' + color + '"></div>' +
+        '<div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">' + a.title + '</p>' +
+        '<p style="font-size:11px;color:#888;margin:2px 0 0;">' + (a.description || 'No description') + '</p></div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
+        '<span class="badge badge-amber" style="font-size:10px;">Due ' + (a.due || 'TBD') + '</span>' +
+        '<span style="font-size:10px;color:#888;">' + (a.points || 100) + ' pts</span></div>';
+      row.addEventListener('click', function() {
+        if (typeof openTeacherAssignmentDetail === 'function') openTeacherAssignmentDetail(a);
+      });
+      list.appendChild(row);
+    });
+  })
+  .catch(function(err) {
+    list.innerHTML = '<p style="font-size:13px;color:#888;text-align:center;padding:1rem;">Failed to load: ' + err.message + '</p>';
+  });
 }
 
 function renderTeacherPeople(subjectId) {

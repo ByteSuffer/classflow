@@ -1152,7 +1152,8 @@ async function submitCreateAssignment() {
 // ─────────────────────────────────────────
 // OVERRIDE: renderTeacherClasswork — real data
 // ─────────────────────────────────────────
-window.renderTeacherClasswork = async function(subjectId) {
+window._apiBridgeClasswork = async function(subjectId) {
+  window.renderTeacherClasswork = window._apiBridgeClasswork;
   var list = document.getElementById('t-classwork-list');
   if (!list) return;
 
