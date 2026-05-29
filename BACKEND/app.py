@@ -819,6 +819,15 @@ def seed_once():
     seed()
     return jsonify({'status': 'seeded'})
 
+@app.route('/api/debug/assignments', methods=['GET'])
+def debug_assignments():
+    results = db.session.query(
+        Assignment.id, Assignment.title, Assignment.subject_id, Subject.name
+    ).join(Subject).all()
+    return jsonify([{
+        'id': r[0], 'title': r[1],
+        'subject_id': r[2], 'subject_name': r[3]
+    } for r in results])
 
 if __name__ == '__main__':
     with app.app_context():
