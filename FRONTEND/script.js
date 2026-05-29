@@ -426,22 +426,51 @@ function postClassComment() {
 function renderClasswork(subjectId) {
   const list = document.getElementById('classwork-list');
   if (!list) return;
-  const items = ASSIGNMENTS.filter(a => parseInt(a.subject) === parseInt(subjectId));
-  if (items.length === 0) {
-    list.innerHTML = '<p style="font-size:13px;color:#bbb;text-align:center;padding:0.5rem 0;">No assignments yet.</p>';
-    return;
-  }
-  const sub = (window.SUBJECTS || SUBJECTS).find(s => s.id == subjectId);
-  if (!sub) return;
-  list.innerHTML = `<div class="card-label">Assignments</div>` + items.map(a => {
-    const bc = a.status === 'graded' ? (a.score>=80?'badge-green':'badge-amber') : a.status === 'submitted' ? 'badge-blue' : a.due.includes('Today') ? 'badge-red' : 'badge-amber';
-    const bl = a.status === 'graded' ? a.score+'/100' : a.status === 'submitted' ? 'Submitted' : a.due;
-    return `<div class="row" onclick="openAssignment(${a.id}); showStudentPage('s-assignments',document.querySelectorAll('#student-sidebar .nav-item')[2])">
-      <div class="dot" style="background:${sub.color}"></div>
-      <div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">${a.title}</p><p style="font-size:11px;color:#888;margin:2px 0 0;">${a.due}</p></div>
-      <span class="badge ${bc}">${bl}</span>
-    </div>`;
-  }).join('');
+
+  list.innerHTML = '<p style="font-size:13px;color:#888;text-align:center;padding:0.5rem 0;">Loading...</p>';
+
+  var sid = parseInt(subjectId, 10);
+  var token = localStorage.getItem('classflow-token');
+
+  fetch('https://classflow-skuk.onrender.com/api/assignments?subject_id=' + sid, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(items) {
+    if (!items || items.length === 0) {
+      list.innerHTML = '<p style="font-size:13px;color:#bbb;text-align:center;padding:0.5rem 0;">No assignments yet.</p>';
+      return;
+    }
+
+    var sub = (window.SUBJECTS || SUBJECTS).find(function(s) { return parseInt(s.id) === sid; });
+    if (!sub) return;
+
+    list.innerHTML = '<div class="card-label">Assignments</div>' + items.map(function(a) {
+      var bc = a.status === 'graded' ? (a.score >= 80 ? 'badge-green' : 'badge-amber')
+             : a.status === 'submitted' ? 'badge-blue'
+             : (a.due && a.due.includes('Today')) ? 'badge-red'
+             : 'badge-amber';
+      var bl = a.status === 'graded' ? a.score + '/100'
+             : a.status === 'submitted' ? 'Submitted'
+             : a.due || 'No due date';
+      return '<div class="row" onclick="openAssignment(' + a.id + '); showStudentPage(\'s-assignments\',document.querySelectorAll(\'#student-sidebar .nav-item\')[2])">' +
+        '<div class="dot" style="background:' + sub.color + '"></div>' +
+        '<div style="flex:1;"><p style="font-size:13px;font-weight:500;margin:0;">' + a.title + '</p>' +
+        '<p style="font-size:11px;color:#888;margin:2px 0 0;">' + (a.due || '') + '</p></div>' +
+        '<span class="badge ' + bc + '">' + bl + '</span>' +
+        '</div>';
+    }).join('');
+
+    // Update local cache with fresh data
+    if (window.ASSIGNMENTS) {
+      window.ASSIGNMENTS = window.ASSIGNMENTS
+        .filter(function(a) { return parseInt(a.subject) !== sid; })
+        .concat(items);
+    }
+  })
+  .catch(function(err) {
+    list.innerHTML = '<p style="font-size:13px;color:#888;text-align:center;padding:0.5rem 0;">Failed to load assignments.</p>';
+  });
 }
 
 function renderPeople(subjectId) {
