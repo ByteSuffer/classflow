@@ -857,19 +857,37 @@ window.finalSubmit = async function (id) {
 // ─────────────────────────────────────────
 window.unsubmitAssignment = async function (id) {
   const st = SUBMISSION_STATE[id];
-  if (!st || !st.backendId) { showToast('Cannot unsubmit — submission ID not found', 'error'); return; }
-  try {
-    await apiUnsubmit(st.backendId);
-    st.status = 'pending'; st.submittedAt = null; st.backendId = null;
-    const a = ASSIGNMENTS.find(x => x.id === id);
-    if (a) a.status = 'pending';
-    const sub = SUBJECTS.find(s => s.id === (a ? a.subject : null));
-    renderAssignDetailPage(a, sub, st);
-    renderStudentDashboard();
-    showToast('Submission recalled. You can edit and resubmit.', 'warning');
-  } catch (err) {
-    showToast('Unsubmit failed: ' + err.message, 'error');
+  if (!st) { showToast('Submission state not found', 'error'); return; }
+
+  // If we have a real backend submission ID, call the API
+  if (st.backendId) {
+    try {
+      await apiUnsubmit(st.backendId);
+      st.status      = 'pending';
+      st.submittedAt = null;
+      st.backendId   = null;
+      const a   = (window.ASSIGNMENTS || ASSIGNMENTS).find(x => x.id === id || x.id === parseInt(id));
+      if (a) a.status = 'pending';
+      const sub = (window.SUBJECTS || SUBJECTS).find(s => parseInt(s.id) === parseInt(a ? a.subject : 0));
+      renderAssignDetailPage(a, sub, st);
+      renderStudentDashboard();
+      showToast('Submission recalled. You can edit and resubmit.', 'warning');
+    } catch (err) {
+      showToast('Unsubmit failed: ' + err.message, 'error');
+    }
+    return;
   }
+
+  // No backendId — submission was local only, just reset state
+  st.status      = 'pending';
+  st.submittedAt = null;
+  st.backendId   = null;
+  const a   = (window.ASSIGNMENTS || ASSIGNMENTS).find(x => x.id === id || x.id === parseInt(id));
+  if (a) a.status = 'pending';
+  const sub = (window.SUBJECTS || SUBJECTS).find(s => parseInt(s.id) === parseInt(a ? a.subject : 0));
+  renderAssignDetailPage(a, sub, st);
+  renderStudentDashboard();
+  showToast('Submission recalled. You can edit and resubmit.', 'warning');
 };
 
 

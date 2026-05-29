@@ -409,7 +409,7 @@ function promptSubmit(id) {
   document.getElementById('submit-confirm-title').textContent = 'Hand in ' + a.title + '?';
   document.getElementById('submit-confirm-sub').textContent =
     'You\'re about to submit to ' + sub.professor + '. You can unsubmit until graded.';
-  document.getElementById('submit-confirm-btn').onclick = () => finalSubmit(id);
+  document.getElementById('submit-confirm-btn').onclick = () => window.finalSubmit(id);
   overlay.classList.add('open');
 }
 
