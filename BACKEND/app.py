@@ -829,6 +829,14 @@ def debug_assignments():
         'subject_id': r[2], 'subject_name': r[3]
     } for r in results])
 
+@app.route('/api/debug/fix-assignments', methods=['GET'])
+def fix_assignments():
+    # Delete the wrongly created test assignments (IDs 8-12 are the ones we created)
+    # Keep only the original seeded ones (IDs 1-7)
+    Assignment.query.filter(Assignment.id >= 8).delete()
+    db.session.commit()
+    return jsonify({'status': 'deleted assignments with id >= 8'})
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
