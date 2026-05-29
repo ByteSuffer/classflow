@@ -765,28 +765,27 @@ function renderAssignmentList(filter = 'all') {
 }
 
 function openAssignment(id) {
-  const a      = ASSIGNMENTS.find(x => x.id === id);
-  const sub    = SUBJECTS.find(s => s.id === a.subject);
+  // Find in local cache first, then fall back to window.ASSIGNMENTS
+  const allAssigns = window.ASSIGNMENTS || ASSIGNMENTS;
+  const a = allAssigns.find(x => x.id === id || x.id === parseInt(id));
+  if (!a) {
+    showToast('Assignment not found', 'error');
+    return;
+  }
+
+  const allSubjects = window.SUBJECTS || SUBJECTS;
+  const sub = allSubjects.find(s => parseInt(s.id) === parseInt(a.subject));
+  if (!sub) return;
+
   const detail = document.getElementById('assign-detail');
   detail.style.display = 'block';
 
   document.getElementById('ad-title').textContent = a.title;
-  // FIX: was 'ad-subject', correct ID is 'ad-sub'
-  document.getElementById('ad-sub').textContent   = sub.name + ' · ' + a.due;
+  document.getElementById('ad-sub').textContent   = sub.name + ' · ' + (a.due || '');
 
   const actions = document.getElementById('ad-actions');
 
-  if (a.status === 'pending') {
-    actions.innerHTML = `
-      <p style="font-size:12px;color:#888;margin:0 0 8px;">Upload your submission:</p>
-      <input type="text" id="submit-link" placeholder="Paste Google Drive link or file name" style="margin-bottom:8px;">
-      <button class="btn btn-dark btn-full" onclick="submitAssignment(${id})">Submit assignment →</button>`;
-  } else if (a.status === 'submitted') {
-    actions.innerHTML = `
-      <div style="background:#dceeff;border-radius:8px;padding:10px 14px;">
-        <p style="font-size:13px;color:#1a5a9a;margin:0;">Submitted — awaiting grade from professor.</p>
-      </div>`;
-  } else {
+  if (a.status === 'graded') {
     const bg = a.score >= 80 ? '#dff0e6' : '#fef3dc';
     const tc = a.score >= 80 ? '#1a6b40' : '#7a4800';
     actions.innerHTML = `
@@ -794,6 +793,21 @@ function openAssignment(id) {
         <p style="font-size:15px;font-weight:600;margin:0 0 4px;color:${tc}">Score: ${a.score}/100</p>
         <p style="font-size:12px;color:#888;margin:0;">Good work! Keep it up.</p>
       </div>`;
+  } else if (a.status === 'submitted') {
+    actions.innerHTML = `
+      <div style="background:#dceeff;border-radius:8px;padding:10px 14px;">
+        <p style="font-size:13px;color:#1a5a9a;margin:0;">Submitted — awaiting grade from professor.</p>
+      </div>`;
+  } else {
+    actions.innerHTML = `
+      <p style="font-size:12px;color:#888;margin:0 0 8px;">
+        ${a.description ? a.description : 'No description provided.'}
+      </p>
+      <p style="font-size:12px;color:#888;margin:0 0 8px;">
+        Due: ${a.due || 'No due date'} &nbsp;·&nbsp; ${a.points || 100} points
+      </p>
+      <input type="text" id="submit-link" placeholder="Paste Google Drive link or file name" style="margin-bottom:8px;">
+      <button class="btn btn-dark btn-full" onclick="submitAssignment(${a.id})">Submit assignment →</button>`;
   }
   detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -803,8 +817,9 @@ function submitAssignment(id) {
   const link   = linkEl ? linkEl.value.trim() : '';
   if (!link) { showToast('Please enter a file link or name', 'warning'); return; }
 
-  const a   = ASSIGNMENTS.find(x => x.id === id);
-  a.status  = 'submitted';
+  const allAssigns = window.ASSIGNMENTS || ASSIGNMENTS;
+  const a = allAssigns.find(x => x.id === id || x.id === parseInt(id));
+  if (a) a.status = 'submitted';
 
   renderStudentDashboard();
   document.getElementById('assign-detail').style.display = 'none';
