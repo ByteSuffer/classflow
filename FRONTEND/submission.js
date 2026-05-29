@@ -396,15 +396,19 @@ function promptSubmit(id) {
   const st = SUBMISSION_STATE[id];
   const hasContent = st.files.length > 0 || st.links.length > 0 || st.text.trim();
   if (!hasContent) {
-    showToast('Please add at least one file, link, or answer text', '#E24B4A');
+    showToast('Please add at least one file, link, or typed answer before submitting', '#E24B4A');
     return;
   }
-  // Show confirmation overlay
+
+  const allAssigns  = window.ASSIGNMENTS || ASSIGNMENTS;
+  const allSubjects = window.SUBJECTS || SUBJECTS;
+  const a   = allAssigns.find(x => x.id === id || x.id === parseInt(id));
+  const sub = allSubjects.find(s => parseInt(s.id) === parseInt(a.subject));
+
   const overlay = document.getElementById('submit-confirm-overlay');
-  const a  = ASSIGNMENTS.find(x => x.id === id);
   document.getElementById('submit-confirm-title').textContent = 'Hand in ' + a.title + '?';
   document.getElementById('submit-confirm-sub').textContent =
-    `You're about to submit ${st.files.length} file(s)${st.links.length?', '+st.links.length+' link(s)':''} to ${SUBJECTS.find(s=>s.id===a.subject).professor}. You can unsubmit until graded.`;
+    'You\'re about to submit to ' + sub.professor + '. You can unsubmit until graded.';
   document.getElementById('submit-confirm-btn').onclick = () => finalSubmit(id);
   overlay.classList.add('open');
 }
@@ -416,38 +420,38 @@ function closeSubmitConfirm() {
 function finalSubmit(id) {
   closeSubmitConfirm();
   const st = SUBMISSION_STATE[id];
-  const a  = ASSIGNMENTS.find(x => x.id === id);
+  const allAssigns  = window.ASSIGNMENTS || ASSIGNMENTS;
+  const allSubjects = window.SUBJECTS || SUBJECTS;
+  const a   = allAssigns.find(x => x.id === id || x.id === parseInt(id));
+  if (!a) { showToast('Assignment not found', '#E24B4A'); return; }
 
-  // Update state
   st.status      = 'submitted';
   st.submittedAt = 'Just now';
   a.status       = 'submitted';
 
-  // Add a notification
   NOTIFICATIONS.unshift({
     type: 'success', icon: '✅',
-    title: `${a.title} submitted`,
+    title: a.title + ' submitted',
     body: 'Your assignment was handed in successfully.',
     time: 'Just now'
   });
 
-  // Re-render the detail page with new state
-  const sub = SUBJECTS.find(s => s.id === a.subject);
+  const sub = allSubjects.find(s => parseInt(s.id) === parseInt(a.subject));
   renderAssignDetailPage(a, sub, st);
-
-  // Refresh lists behind the page
   renderStudentDashboard();
-
   showToast('✅ Assignment submitted!');
 }
 
 function unsubmitAssignment(id) {
   const st = SUBMISSION_STATE[id];
-  const a  = ASSIGNMENTS.find(x => x.id === id);
+  const allAssigns  = window.ASSIGNMENTS || ASSIGNMENTS;
+  const allSubjects = window.SUBJECTS || SUBJECTS;
+  const a   = allAssigns.find(x => x.id === id || x.id === parseInt(id));
+  if (!a) return;
   st.status      = 'pending';
   st.submittedAt = null;
   a.status       = 'pending';
-  const sub = SUBJECTS.find(s => s.id === a.subject);
+  const sub = allSubjects.find(s => parseInt(s.id) === parseInt(a.subject));
   renderAssignDetailPage(a, sub, st);
   renderStudentDashboard();
   showToast('Submission recalled. You can edit and resubmit.', '#7a4800');
