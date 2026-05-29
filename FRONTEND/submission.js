@@ -102,7 +102,7 @@ function renderAssignDetailPage(a, sub, st) {
 
   // Status bar
   const statusMap = {
-    pending:   { dot: '#E24B4A', text: 'Not submitted yet', badge: '<span class="badge badge-red">Missing</span>' },
+    pending: { dot: '#BA7517', text: 'Not submitted yet', badge: '<span class="badge badge-amber">Assigned</span>' },
     submitted: { dot: '#378ADD', text: 'Submitted — awaiting grade', badge: '<span class="badge badge-blue">Turned in</span>' },
     graded:    { dot: '#1D9E75', text: `Graded — ${st.score}/100`, badge: `<span class="badge badge-green">${st.score}/100</span>` }
   };
