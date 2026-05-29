@@ -17,7 +17,8 @@ let currentOpenAssignId = null;
 // ── INIT state for each assignment ──
 function ensureSubState(id) {
   if (!SUBMISSION_STATE[id]) {
-    const a = ASSIGNMENTS.find(x => x.id === id);
+    const allAssigns = window.ASSIGNMENTS || ASSIGNMENTS;
+    const a = allAssigns.find(x => x.id === id || x.id === parseInt(id));
     SUBMISSION_STATE[id] = {
       files: [],
       links: [],
@@ -68,9 +69,13 @@ function showToast(msg, color='#1a6b40') {
 // ── OPEN ASSIGNMENT DETAIL PAGE ──
 function openAssignmentDetail(id) {
   currentOpenAssignId = id;
+  const allAssigns = window.ASSIGNMENTS || ASSIGNMENTS;
+  const allSubjects = window.SUBJECTS || SUBJECTS;
   ensureSubState(id);
-  const a   = ASSIGNMENTS.find(x => x.id === id);
-  const sub = SUBJECTS.find(s => s.id === a.subject);
+  const a   = allAssigns.find(x => x.id === id || x.id === parseInt(id));
+  if (!a) { showToast('Assignment not found', '#E24B4A'); return; }
+  const sub = allSubjects.find(s => parseInt(s.id) === parseInt(a.subject));
+  if (!sub) { showToast('Subject not found', '#E24B4A'); return; }
   const st  = SUBMISSION_STATE[id];
 
   const page = document.getElementById('assign-detail-page');
